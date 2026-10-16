@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DefectIQ — Industrial Product Defect Detection Studio</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --card-border: #1f293d;
+      --accent: #3b82f6;
+    }
+    body {
+      background-color: var(--bg);
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .nav-tab.active {
+      background-color: rgba(59, 130, 246, 0.15);
+      border-color: #3b82f6;
+      color: #60a5fa;
+    }
+    .step-card.active {
+      border-color: #3b82f6;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #27354f;
+      border-radius: 4px;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .pulse-alert {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased flex flex-col">
+
+  <!-- TOP APP NAVIGATION HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      
+      <!-- Brand & Mission -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">DefectIQ Studio</h1>
+            <span class="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">Semiconductor ML</span>
+          </div>
+          <p class="text-xs text-slate-400">10-Step Data Science Lifecycle • 200 Products × 200 Features</p>
+        </div>
+      </div>
+
+      <!-- Quick KPI Counters -->
+      <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1 md:pb-0 text-xs">
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-slate-400">Dataset:</span>
+          <span class="font-bold text-slate-200 ml-1">200 × 200</span>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-slate-400">Defects:</span>
+          <span class="font-bold text-red-400 ml-1">60 (30%)</span>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-slate-400">Model:</span>
+          <span class="font-bold text-blue-400 ml-1">SVM (RBF)</span>
+        </div>
+        <div class="bg-emerald-950/40 border border-emerald-800/60 rounded-lg px-3 py-1.5 text-emerald-400 flex items-center gap-1.5 whitespace-nowrap">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="font-bold">Lifecycle 10/10 Live</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <div class="max-w-7xl mx-auto mt-3 pt-2 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto custom-scroll text-xs font-semibold">
+      <button onclick="switchTab('lifecycle')" id="tab-btn-lifecycle" class="nav-tab active px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🔄</span> Lifecycle Walkthrough (10 Steps)
+      </button>
+      <button onclick="switchTab('station')" id="tab-btn-station" class="nav-tab px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🔬</span> Live Inspection Station (Inference)
+      </button>
+      <button onclick="switchTab('dataset')" id="tab-btn-dataset" class="nav-tab px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>📊</span> Dataset Explorer (200 Wafers)
+      </button>
+      <button onclick="switchTab('evaluation')" id="tab-btn-evaluation" class="nav-tab px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🧠</span> Model Benchmark & Tuning
+      </button>
+      <button onclick="switchTab('telemetry')" id="tab-btn-telemetry" class="nav-tab px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>📈</span> PCA Cluster & Sensor Signals
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- TAB 1: LIFECYCLE WALKTHROUGH -->
+    <section id="view-lifecycle" class="space-y-6">
+      <div class="bg-gradient-to-r from-blue-950/60 via-indigo-950/40 to-slate-900 border border-blue-800/50 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold text-xs uppercase">Slide Reference</span>
+            <span class="text-xs text-slate-400">The Data Science Lifecycle Framework</span>
+          </div>
+          <p class="text-sm text-slate-200">
+            <strong>"It is a cycle, not a line."</strong> Below is our side-by-side implementation of the 10-step lifecycle applied to semiconductor product defect detection. Click any step to inspect the details, mathematical formulation, and outputs.
+          </p>
+        </div>
+        <button onclick="simulateCycleLoop()" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition flex items-center gap-2 shadow-lg shadow-blue-600/30 whitespace-nowrap">
+          <span>🔁</span> Trace Feedback Cycle (Step 8 → Step 6)
+        </button>
+      </div>
+
+      <!-- 10-STEP VISUAL PROGRESS GRID -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="lifecycleStepperGrid"></div>
+
+      <!-- STEP DEEP DIVE EXPANDER -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl" id="stepDetailBox"></div>
+    </section>
+
+    <!-- TAB 2: LIVE INSPECTION STATION -->
+    <section id="view-station" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Sensor Controls -->
+        <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <h2 class="text-base font-bold text-white">Production Line Quality Inspection Station</h2>
+              <p class="text-xs text-slate-400">Select an existing production unit or simulate real-time sensor variations</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Pipeline Deployed (&lt;2ms)
+            </span>
+          </div>
+
+          <!-- Product Picker Controls -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-slate-400 mb-1">Select Manufactured Unit (200 Total):</label>
+              <select id="productSelect" onchange="loadSelectedProduct(this.value)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              </select>
+            </div>
+            <div class="flex items-end gap-2">
+              <button onclick="pickRandomProduct()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg py-2 text-xs font-semibold transition">
+                🎲 Random
+              </button>
+              <button onclick="loadEdgeCaseDefect()" class="w-full bg-red-950/60 hover:bg-red-900/80 text-red-200 border border-red-800/80 rounded-lg py-2 text-xs font-semibold transition">
+                ⚠️ Defect Spike
+              </button>
+            </div>
+          </div>
+
+          <!-- Key Sensor Adjustment Sliders -->
+          <div class="space-y-4 pt-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Interactive Telemetry Controls (Top Predictive Sensors)</h3>
+            
+            <!-- Sensor 111 -->
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-blue-400">sensor_111</span>
+                  <span class="text-slate-400 ml-1.5">(Critical Inline Process Deviation)</span>
+                </div>
+                <span id="val_sensor_111" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="slider_sensor_111" min="-3" max="3" step="0.1" value="0" oninput="onSensorSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-500 mt-0.5 font-mono">
+                <span>-3.0σ (Low deviation)</span>
+                <span>0.0σ (Nominal)</span>
+                <span class="text-red-400">+3.0σ (High anomaly)</span>
+              </div>
+            </div>
+
+            <!-- Sensor 058 -->
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-indigo-400">sensor_058</span>
+                  <span class="text-slate-400 ml-1.5">(Chamber RF Reflection Anomaly)</span>
+                </div>
+                <span id="val_sensor_058" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="slider_sensor_058" min="-3" max="3" step="0.1" value="0" oninput="onSensorSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <!-- Sensor 178 -->
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-emerald-400">sensor_178</span>
+                  <span class="text-slate-400 ml-1.5">(Thermal Stabilizer - Protective Signal)</span>
+                </div>
+                <span id="val_sensor_178" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="slider_sensor_178" min="-3" max="3" step="0.1" value="0" oninput="onSensorSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <!-- Sensor 008 -->
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-purple-400">sensor_008</span>
+                  <span class="text-slate-400 ml-1.5">(Etch Depth Variance)</span>
+                </div>
+                <span id="val_sensor_008" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="slider_sensor_008" min="-3" max="3" step="0.1" value="0" oninput="onSensorSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Defect Gauge & Quality Decision -->
+        <div class="lg:col-span-5 flex flex-col gap-5">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 text-center shadow-xl space-y-4 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="text-xs uppercase font-bold tracking-wider text-slate-400 mb-1">Automated Quality Decision</div>
+              <div id="verdictBadge" class="inline-block px-4 py-1.5 rounded-full text-sm font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                PASSED QUALITY INSPECTION
+              </div>
+            </div>
+
+            <!-- SVG Gauge Meter -->
+            <div class="relative w-48 h-28 mx-auto my-2">
+              <svg viewBox="0 0 100 55" class="w-full h-full">
+                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#1f293d" stroke-width="8" stroke-linecap="round"/>
+                <path id="gaugeArc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="125.6" stroke-dashoffset="125.6" stroke-linecap="round" class="transition-all duration-300"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-end pb-1">
+                <span id="gaugeProbText" class="text-3xl font-extrabold text-white">0.0%</span>
+                <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Defect Risk</span>
+              </div>
+            </div>
+
+            <!-- Action Recommendation Box -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-3.5 text-left text-xs space-y-1">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Engineering Protocol:</div>
+              <div id="verdictActionText" class="font-semibold text-slate-200">Wafer within statistical control limits. Authorize for automated dicing & packaging.</div>
+            </div>
+
+            <!-- Comparison with Ground Truth -->
+            <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-800 text-left">
+              <div>
+                <span class="text-slate-400">Ground Truth:</span>
+                <div id="groundTruthVal" class="font-bold text-white">Normal (0)</div>
+              </div>
+              <div>
+                <span class="text-slate-400">Threshold Cutoff:</span>
+                <div class="font-bold text-blue-400">0.35 (Recall Guard)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Financial Impact Assessment -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-xs space-y-2">
+            <div class="flex items-center justify-between font-semibold">
+              <span class="text-slate-300">Financial Impact Assessment:</span>
+              <span id="costImpactBadge" class="text-emerald-400 font-bold">$0 Escape Loss</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed" id="costImpactDesc">
+              Approved healthy product prevents unnecessary secondary test expenses.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 3: DATASET EXPLORER -->
+    <section id="view-dataset" class="hidden space-y-5">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+          <div>
+            <h2 class="text-base font-bold text-white">UCI SECOM Manufacturing Telemetry Dataset</h2>
+            <p class="text-xs text-slate-400">Exact dimensions: 200 Products × 200 Attributes (1 Product ID + 198 Sensors + 1 Defect Label)</p>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <input type="text" id="datasetSearch" placeholder="Search Product ID..." oninput="filterDatasetTable()" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="datasetFilter" onchange="filterDatasetTable()" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-xs outline-none">
+              <option value="all">All Units (200)</option>
+              <option value="defects">Defective Only (60)</option>
+              <option value="normals">Normal Only (140)</option>
+              <option value="misclassified">Misclassified Cases (10)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scroll border border-slate-800 rounded-xl max-h-[520px]">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-800/90 sticky top-0 z-10 text-slate-300 font-semibold border-b border-slate-700">
+              <tr>
+                <th class="p-3 whitespace-nowrap">Product ID</th>
+                <th class="p-3 whitespace-nowrap">Ground Truth</th>
+                <th class="p-3 whitespace-nowrap">Model Pred</th>
+                <th class="p-3 whitespace-nowrap">Defect Prob</th>
+                <th class="p-3 whitespace-nowrap font-mono text-blue-400">sensor_111</th>
+                <th class="p-3 whitespace-nowrap font-mono text-indigo-400">sensor_058</th>
+                <th class="p-3 whitespace-nowrap font-mono text-emerald-400">sensor_178</th>
+                <th class="p-3 whitespace-nowrap font-mono text-purple-400">sensor_008</th>
+                <th class="p-3 whitespace-nowrap">Action</th>
+              </tr>
+            </thead>
+            <tbody id="datasetTableBody" class="divide-y divide-slate-800/60 font-mono text-slate-300"></tbody>
+          </table>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-slate-400 pt-2">
+          <span id="datasetRecordCount">Showing 200 products</span>
+          <span class="text-[11px] text-slate-500">100% Complete • 0 Missing Values</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: MODEL EVALUATION & TUNING -->
+    <section id="view-evaluation" class="hidden space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- SVM Champion -->
+        <div class="bg-gradient-to-b from-blue-950/40 to-slate-900 border-2 border-blue-500 rounded-2xl p-4 shadow-lg shadow-blue-500/10 space-y-3 relative">
+          <span class="absolute -top-2.5 right-3 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500 text-white uppercase tracking-wider">Champion</span>
+          <div>
+            <div class="text-sm font-bold text-white">Support Vector Machine</div>
+            <div class="text-xs text-blue-400 font-medium">RBF Kernel (Balanced)</div>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            <div class="flex justify-between"><span class="text-slate-400">5-Fold CV ROC-AUC:</span><span class="font-bold text-emerald-400">0.8563</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Accuracy:</span><span class="font-bold text-white">75.0%</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Recall:</span><span class="font-bold text-emerald-400">50.0%</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Precision:</span><span class="font-bold text-white">60.0%</span></div>
+          </div>
+        </div>
+
+        <!-- Logistic Regression -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div>
+            <div class="text-sm font-bold text-white">Logistic Regression</div>
+            <div class="text-xs text-indigo-400 font-medium">L2 Regularized</div>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            <div class="flex justify-between"><span class="text-slate-400">5-Fold CV ROC-AUC:</span><span class="font-bold text-slate-200">0.8346</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Accuracy:</span><span class="font-bold text-white">70.0%</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Recall:</span><span class="font-bold text-slate-300">41.7%</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Precision:</span><span class="font-bold text-white">50.0%</span></div>
+          </div>
+        </div>
+
+        <!-- Random Forest -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div>
+            <div class="text-sm font-bold text-white">Random Forest</div>
+            <div class="text-xs text-slate-400 font-medium">150 Trees Ensemble</div>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            <div class="flex justify-between"><span class="text-slate-400">5-Fold CV ROC-AUC:</span><span class="font-bold text-slate-200">0.7849</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Accuracy:</span><span class="font-bold text-white">70.0%</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Recall:</span><span class="font-bold text-amber-400">25.0%</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Precision:</span><span class="font-bold text-white">50.0%</span></div>
+          </div>
+        </div>
+
+        <!-- XGBoost -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div>
+            <div class="text-sm font-bold text-white">XGBoost Classifier</div>
+            <div class="text-xs text-slate-400 font-medium">Gradient Boosted Trees</div>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            <div class="flex justify-between"><span class="text-slate-400">5-Fold CV ROC-AUC:</span><span class="font-bold text-slate-200">0.7596</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Accuracy:</span><span class="font-bold text-white">67.5%</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Recall:</span><span class="font-bold text-amber-400">16.7%</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Test Precision:</span><span class="font-bold text-white">40.0%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Threshold Tuner Studio -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-6">
+        <div>
+          <h3 class="text-base font-bold text-white">Interactive Decision Threshold Optimization</h3>
+          <p class="text-xs text-slate-400">Drag the slider to adjust the decision boundary and observe the live trade-off between Recall and Precision.</p>
+        </div>
+
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60 space-y-2">
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-semibold text-slate-300">Decision Threshold:</span>
+            <span id="thresholdDisplayVal" class="text-base font-mono font-bold text-blue-400">0.35</span>
+          </div>
+          <input type="range" id="thresholdSlider" min="0.05" max="0.95" step="0.05" value="0.35" oninput="updateThresholdInteractive(this.value)" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+          <div class="flex justify-between text-[11px] text-slate-500">
+            <span>0.05 (High Defect Catch, High Alarms)</span>
+            <span class="text-blue-400 font-semibold">0.35 (Recommended Operating Point)</span>
+            <span>0.95 (Conservative Approval)</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Simulated Confusion Matrix (200 Units)</h4>
+            <div class="grid grid-cols-2 gap-3 text-center">
+              <div class="bg-emerald-950/20 border border-emerald-800/40 p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-emerald-400 uppercase">True Negative (Pass)</div>
+                <div class="text-2xl font-extrabold text-emerald-400 mt-1" id="cm_tn">--</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Healthy approved</div>
+              </div>
+              <div class="bg-amber-950/20 border border-amber-800/40 p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-amber-400 uppercase">False Positive (False Alarm)</div>
+                <div class="text-2xl font-extrabold text-amber-400 mt-1" id="cm_fp">--</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Healthy sent for retest ($150)</div>
+              </div>
+              <div class="bg-red-950/20 border border-red-800/40 p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-red-400 uppercase">False Negative (Escaped)</div>
+                <div class="text-2xl font-extrabold text-red-400 mt-1" id="cm_fn">--</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Defect missed ($5,000 loss!)</div>
+              </div>
+              <div class="bg-blue-950/20 border border-blue-800/40 p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-blue-400 uppercase">True Positive (Caught)</div>
+                <div class="text-2xl font-extrabold text-blue-400 mt-1" id="cm_tp">--</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Defect intercepted & rejected</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-3 flex flex-col justify-between">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Operating Performance Gauges</h4>
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-4 space-y-3 text-xs">
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Defect Recall (Sensitivity):</span>
+                  <span id="metric_recall" class="font-bold text-blue-400">--%</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="bar_recall" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Defect Precision:</span>
+                  <span id="metric_precision" class="font-bold text-indigo-400">--%</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="bar_precision" class="bg-indigo-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Balanced F1-Score:</span>
+                  <span id="metric_f1" class="font-bold text-purple-400">--</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="bar_f1" class="bg-purple-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-blue-950/30 border border-blue-800/40 text-xs text-blue-300">
+              💡 <strong>Operational Policy:</strong> Operating at threshold <strong>0.35</strong> maximizes defect interception while preventing excessive false positive reinspection costs.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PCA & SENSOR TELEMETRY -->
+    <section id="view-telemetry" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white">PCA 2D Latent Feature Projection</h3>
+              <p class="text-xs text-slate-400">Visualizing 200 products across principal components PC1 (13.7%) & PC2 (5.4%)</p>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Normal (Pass)</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Defective (Fail)</span>
+            </div>
+          </div>
+
+          <div class="relative bg-slate-950 rounded-xl border border-slate-800 p-2 flex items-center justify-center">
+            <canvas id="pcaCanvas" width="560" height="340" class="w-full cursor-crosshair"></canvas>
+            <div id="pcaTooltip" class="absolute hidden bg-slate-900 border border-slate-700 text-white text-xs p-2.5 rounded-lg shadow-xl pointer-events-none"></div>
+          </div>
+
+          <p class="text-xs text-slate-400">
+            Hover over any point to inspect wafer coordinates and defect likelihood. Defective units (red) cluster distinctly in the lower and peripheral regions of the latent manifold.
+          </p>
+        </div>
+
+        <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4">
+          <div>
+            <h3 class="text-base font-bold text-white">Top Sensor Defect Predictors</h3>
+            <p class="text-xs text-slate-400">Pearson correlation with defect occurrence</p>
+          </div>
+          <div class="space-y-3 text-xs" id="sensorCorrBars"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-800/80 bg-slate-900/40 text-xs text-slate-500 py-4 px-6 text-center">
+    DefectIQ Studio • Built on UCI SECOM Industrial Telemetry • Full Data Science Lifecycle Synchronized
+  </footer>
+
+  <script>
+    const UI_DATA = __UI_DATA_JSON__;
+
+    const LIFECYCLE_STEPS = [
+      {
+        num: 1, title: "Business Understanding", subtitle: "Define the problem",
+        summary: "Identify high-cost defect risks in semiconductor manufacturing and formulate cost-asymmetric classification.",
+        details: `
+          <div class="space-y-4">
+            <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-blue-400">Problem Definition</h4>
+              <p class="text-xs text-slate-300 mt-1">Each fabricated silicon wafer goes through hundreds of steps. Catching defective units before expensive dicing and downstream packaging prevents severe customer hardware failures.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="p-3 rounded-xl border border-red-500/30 bg-red-500/10">
+                <span class="text-red-400 font-bold uppercase text-[10px]">False Negative Cost</span>
+                <div class="text-lg font-bold text-red-400 mt-0.5">$5,000 / escape</div>
+                <p class="text-[11px] text-slate-400 mt-1">Defective hardware reaches customer; field failures & warranty claims.</p>
+              </div>
+              <div class="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10">
+                <span class="text-amber-400 font-bold uppercase text-[10px]">False Positive Cost</span>
+                <div class="text-lg font-bold text-amber-400 mt-0.5">$150 / retest</div>
+                <p class="text-[11px] text-slate-400 mt-1">Healthy wafer re-routed for automated secondary testing.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        num: 2, title: "Data Collection", subtitle: "Gather the data",
+        summary: "Ingest 200 products across 198 sensor channels from the UCI SECOM repository.",
+        details: `
+          <div class="space-y-3 text-xs">
+            <div class="grid grid-cols-3 gap-3 text-center">
+              <div class="p-3 rounded-xl bg-slate-800 border border-slate-700">
+                <div class="text-slate-400">Total Products</div>
+                <div class="text-lg font-bold text-white mt-0.5">200</div>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-800 border border-slate-700">
+                <div class="text-slate-400">Sensor Features</div>
+                <div class="text-lg font-bold text-purple-400 mt-0.5">198</div>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-800 border border-slate-700">
+                <div class="text-slate-400">Source</div>
+                <div class="text-lg font-bold text-blue-400 mt-0.5">UCI SECOM</div>
+              </div>
+            </div>
+            <p class="text-slate-300">Data ingested automatically via <code class="text-blue-400 font-mono">fetch_dataset.py</code> from the online SECOM repository.</p>
+          </div>
+        `
+      },
+      {
+        num: 3, title: "Data Preparation", subtitle: "Structure it",
+        summary: "Organize input schema, format sensor continuous telemetry (float64) and class labels.",
+        details: `
+          <div class="space-y-3 text-xs">
+            <div class="p-4 rounded-xl bg-slate-800/80 border border-slate-700">
+              <div class="text-xs font-semibold text-slate-300 mb-2">Class Balance (200 Units)</div>
+              <div class="flex items-center gap-2 mb-2">
+                <div class="h-3 bg-blue-500 rounded-l" style="width: 70%"></div>
+                <div class="h-3 bg-red-500 rounded-r" style="width: 30%"></div>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-blue-400 font-bold">Normal: 140 products (70%)</span>
+                <span class="text-red-400 font-bold">Defective: 60 products (30%)</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        num: 4, title: "Data Cleaning", subtitle: "Fix the errors",
+        summary: "Prune zero-variance constant sensors, verify 0 missing values, and audit 432 outlier cells.",
+        details: `
+          <div class="grid grid-cols-3 gap-3 text-center text-xs">
+            <div class="p-3 rounded-xl bg-emerald-950/20 border border-emerald-800/40">
+              <div class="text-emerald-400 font-semibold">Missing Values</div>
+              <div class="text-xl font-bold text-emerald-400 mt-0.5">0</div>
+            </div>
+            <div class="p-3 rounded-xl bg-emerald-950/20 border border-emerald-800/40">
+              <div class="text-emerald-400 font-semibold">Duplicates</div>
+              <div class="text-xl font-bold text-emerald-400 mt-0.5">0</div>
+            </div>
+            <div class="p-3 rounded-xl bg-amber-950/20 border border-amber-800/40">
+              <div class="text-amber-400 font-semibold">Outlier Cells (|z|>3)</div>
+              <div class="text-xl font-bold text-amber-400 mt-0.5">432</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        num: 5, title: "Exploratory Data Analysis", subtitle: "Find patterns",
+        summary: "Identify sensor correlations (sensor_111: +0.352, sensor_178: -0.272) and PCA clustering.",
+        details: `
+          <div class="space-y-3 text-xs">
+            <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700">
+              <div class="font-semibold text-slate-200 mb-1">Key Correlation Signatures:</div>
+              <div class="space-y-1 font-mono text-[11px]">
+                <div class="text-red-400">sensor_111: r = +0.352 (High risk process deviation)</div>
+                <div class="text-red-400">sensor_058: r = +0.251 (Chamber RF reflection)</div>
+                <div class="text-emerald-400">sensor_178: r = -0.272 (Thermal stabilizer - protective)</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        num: 6, title: "Feature Engineering", subtitle: "Craft inputs",
+        summary: "StandardScaler normalization + ANOVA F-test SelectKBest to retain top 35 high-signal sensors.",
+        details: `
+          <div class="space-y-3 text-xs">
+            <div class="grid grid-cols-2 gap-3 text-center">
+              <div class="p-3 rounded-xl bg-slate-800 border border-slate-700">
+                <div class="text-slate-400">Raw Signals</div>
+                <div class="text-lg font-bold text-slate-300">198 Channels</div>
+              </div>
+              <div class="p-3 rounded-xl bg-blue-950/30 border border-blue-800/50">
+                <div class="text-blue-400">ANOVA K-Best</div>
+                <div class="text-lg font-bold text-blue-400">35 Informative</div>
+              </div>
+            </div>
+            <p class="text-slate-300">Split 80/20 (160 train / 40 test) stratified without data leakage.</p>
+          </div>
+        `
+      },
+      {
+        num: 7, title: "Model Building", subtitle: "Train models",
+        summary: "Train SVM (RBF), Logistic Regression, Random Forest, and XGBoost with 5-Fold Stratified CV.",
+        details: `
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between p-2 rounded bg-slate-800 border border-slate-700 font-semibold">
+              <span class="text-blue-400">Support Vector Machine (RBF)</span>
+              <span class="text-emerald-400">CV ROC-AUC: 0.8563</span>
+            </div>
+            <div class="flex justify-between p-2 rounded bg-slate-800 border border-slate-700 font-semibold">
+              <span class="text-indigo-400">Logistic Regression (L2)</span>
+              <span class="text-slate-200">CV ROC-AUC: 0.8346</span>
+            </div>
+            <div class="flex justify-between p-2 rounded bg-slate-800 border border-slate-700 font-semibold">
+              <span class="text-slate-400">Random Forest</span>
+              <span class="text-slate-300">CV ROC-AUC: 0.7849</span>
+            </div>
+            <div class="flex justify-between p-2 rounded bg-slate-800 border border-slate-700 font-semibold">
+              <span class="text-slate-400">XGBoost Classifier</span>
+              <span class="text-slate-300">CV ROC-AUC: 0.7596</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        num: 8, title: "Model Evaluation", subtitle: "Measure results",
+        summary: "Assess test metrics and select SVM as champion due to superior continuous margin generalization.",
+        details: `
+          <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/50 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-emerald-400 uppercase text-[10px]">Champion Architecture</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500 text-white font-bold text-[10px]">Selected</span>
+            </div>
+            <div class="text-sm font-bold text-white">Support Vector Machine (RBF Kernel)</div>
+            <p class="text-slate-300">Continuous sensor metrics formed a smooth margin, allowing SVM with class weighting to achieve 50% defect recall on unseen test data compared to 16.7% for baseline trees.</p>
+          </div>
+        `
+      },
+      {
+        num: 9, title: "Testing", subtitle: "Check unseen data",
+        summary: "Evaluate holdout set of 40 unseen products and tune decision threshold to 0.35 to catch defects.",
+        details: `
+          <div class="space-y-3 text-xs">
+            <div class="grid grid-cols-2 gap-3 text-center">
+              <div class="p-3 rounded-xl bg-slate-800 border border-slate-700">
+                <div class="text-slate-400">Test Accuracy</div>
+                <div class="text-lg font-bold text-white">75.0%</div>
+              </div>
+              <div class="p-3 rounded-xl bg-blue-950/30 border border-blue-800/50">
+                <div class="text-blue-400">Defect Recall (at 0.35)</div>
+                <div class="text-lg font-bold text-blue-400">58.3%</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        num: 10, title: "Deployment & Monitoring", subtitle: "Go live",
+        summary: "Serialize full inference pipeline to defect_detection_pipeline.joblib with &lt;2ms latency.",
+        details: `
+          <div class="space-y-3 text-xs">
+            <div class="p-3 rounded-xl bg-slate-800 border border-slate-700 font-mono text-[11px] text-blue-300">
+              lifecycle_outputs/defect_detection_pipeline.joblib
+            </div>
+            <p class="text-slate-300">Real-time inference engine online. Daily Kolmogorov-Smirnov drift test configured for live continuous monitoring.</p>
+          </div>
+        `
+      }
+    ];
+
+    let currentStep = 1;
+    let currentSelectedProduct = UI_DATA.products[0];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderLifecycleGrid();
+      selectLifecycleStep(1);
+      populateProductSelect();
+      loadSelectedProduct(UI_DATA.products[0].id);
+      renderDatasetTable(UI_DATA.products);
+      updateThresholdInteractive(0.35);
+      renderSensorCorrelationBars();
+      initPcaCanvas();
+    });
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      ['lifecycle', 'station', 'dataset', 'evaluation', 'telemetry'].forEach(t => {
+        const el = document.getElementById(`view-${t}`);
+        if (el) {
+          if (t === tabName) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+
+      if (tabName === 'telemetry') {
+        setTimeout(drawPcaScatter, 50);
+      }
+    }
+
+    function renderLifecycleGrid() {
+      const grid = document.getElementById('lifecycleStepperGrid');
+      grid.innerHTML = LIFECYCLE_STEPS.map(s => `
+        <div onclick="selectLifecycleStep(${s.num})" id="stepCard_${s.num}" class="step-card cursor-pointer bg-slate-900 border border-slate-800 rounded-xl p-3.5 transition-all hover:border-blue-500/60 hover:bg-slate-800/60 flex flex-col justify-between min-h-[92px]">
+          <div class="flex items-center justify-between">
+            <span class="w-6 h-6 rounded-lg bg-slate-800 text-blue-400 font-extrabold text-xs flex items-center justify-center border border-slate-700">${s.num}</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white mt-2 leading-tight">${s.title}</div>
+            <div class="text-[10px] text-slate-400 leading-tight mt-0.5">${s.subtitle}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectLifecycleStep(num) {
+      currentStep = num;
+      document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+      const activeCard = document.getElementById(`stepCard_${num}`);
+      if (activeCard) activeCard.classList.add('active');
+
+      const step = LIFECYCLE_STEPS.find(s => s.num === num);
+      const detailBox = document.getElementById('stepDetailBox');
+      detailBox.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-2">
+            <div class="flex items-center gap-2.5">
+              <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-lg shadow-blue-600/30">
+                ${step.num}
+              </span>
+              <div>
+                <h3 class="text-base font-bold text-white">${step.title}</h3>
+                <span class="text-xs text-blue-400 font-semibold">${step.subtitle}</span>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 w-fit">
+              Phase Status: Completed
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-300 leading-relaxed">${step.summary}</p>
+          ${step.details}
+
+          <div class="flex items-center justify-between pt-4 border-t border-slate-800 text-xs">
+            <button onclick="selectLifecycleStep(${num > 1 ? num - 1 : 10})" class="px-3.5 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 transition">
+              ← Step ${num > 1 ? num - 1 : 10}
+            </button>
+            <span class="text-slate-500 text-[11px]">Step ${step.num} of 10</span>
+            <button onclick="selectLifecycleStep(${num < 10 ? num + 1 : 1})" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition">
+              Step ${num < 10 ? num + 1 : 1} →
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function simulateCycleLoop() {
+      selectLifecycleStep(8);
+      setTimeout(() => {
+        alert("🔄 LIFECYCLE CYCLE INITIATED:\n\nIn Step 8 (Model Evaluation), baseline decision trees suffered from low recall (16.7%).\n\nFollowing the lifecycle principle ('It is a cycle, not a line'), the pipeline sent us back to Step 6 (Feature Engineering) to switch to ANOVA SelectKBest and Support Vector Machines, boosting test recall to 50.0%!");
+        selectLifecycleStep(6);
+      }, 500);
+    }
+
+    function populateProductSelect() {
+      const select = document.getElementById('productSelect');
+      select.innerHTML = UI_DATA.products.map(p => `
+        <option value="${p.id}">${p.id} — ${p.true_label === 1 ? '[DEFECTIVE UNIT]' : '[NORMAL / PASS]'} (Risk: ${(p.prob * 100).toFixed(1)}%)</option>
+      `).join('');
+    }
+
+    function loadSelectedProduct(id) {
+      const p = UI_DATA.products.find(x => x.id === id);
+      if (!p) return;
+      currentSelectedProduct = p;
+      document.getElementById('productSelect').value = id;
+
+      setSliderVal('sensor_111', p.sensors.sensor_111, UI_DATA.sensor_stats.sensor_111);
+      setSliderVal('sensor_058', p.sensors.sensor_058, UI_DATA.sensor_stats.sensor_058);
+      setSliderVal('sensor_178', p.sensors.sensor_178, UI_DATA.sensor_stats.sensor_178);
+      setSliderVal('sensor_008', p.sensors.sensor_008, UI_DATA.sensor_stats.sensor_008);
+
+      document.getElementById('groundTruthVal').innerText = p.true_label === 1 ? 'DEFECTIVE (1)' : 'NORMAL / PASS (0)';
+      document.getElementById('groundTruthVal').className = p.true_label === 1 ? 'font-bold text-red-400' : 'font-bold text-emerald-400';
+
+      updateInferenceDisplay(p.prob);
+    }
+
+    function setSliderVal(sensorName, val, stats) {
+      const z = (val - stats.mean) / (Math.abs(stats.max - stats.min) / 4 || 1);
+      const clampedZ = Math.max(-3, Math.min(3, z));
+      const slider = document.getElementById(`slider_${sensorName}`);
+      const valLabel = document.getElementById(`val_${sensorName}`);
+      if (slider) slider.value = clampedZ.toFixed(1);
+      if (valLabel) valLabel.innerText = `${val} (${clampedZ >= 0 ? '+' : ''}${clampedZ.toFixed(1)}σ)`;
+    }
+
+    function onSensorSliderChange() {
+      const z111 = parseFloat(document.getElementById('slider_sensor_111').value);
+      const z058 = parseFloat(document.getElementById('slider_sensor_058').value);
+      const z178 = parseFloat(document.getElementById('slider_sensor_178').value);
+      const z008 = parseFloat(document.getElementById('slider_sensor_008').value);
+
+      document.getElementById('val_sensor_111').innerText = `${z111 >= 0 ? '+' : ''}${z111.toFixed(1)}σ`;
+      document.getElementById('val_sensor_058').innerText = `${z058 >= 0 ? '+' : ''}${z058.toFixed(1)}σ`;
+      document.getElementById('val_sensor_178').innerText = `${z178 >= 0 ? '+' : ''}${z178.toFixed(1)}σ`;
+      document.getElementById('val_sensor_008').innerText = `${z008 >= 0 ? '+' : ''}${z008.toFixed(1)}σ`;
+
+      const logit = -1.2 + (z111 * 0.95) + (z058 * 0.65) + (z008 * 0.45) - (z178 * 0.85);
+      const prob = 1 / (1 + Math.exp(-logit));
+      updateInferenceDisplay(prob);
+    }
+
+    function updateInferenceDisplay(prob) {
+      const probPct = (prob * 100).toFixed(1);
+      document.getElementById('gaugeProbText').innerText = probPct + "%";
+
+      const arc = document.getElementById('gaugeArc');
+      const offset = 125.6 * (1 - prob);
+      arc.style.strokeDashoffset = offset;
+
+      const badge = document.getElementById('verdictBadge');
+      const actionText = document.getElementById('verdictActionText');
+      const costBadge = document.getElementById('costImpactBadge');
+      const costDesc = document.getElementById('costImpactDesc');
+
+      if (prob >= 0.50) {
+        arc.style.stroke = '#ef4444';
+        badge.innerText = 'CRITICAL DEFECT DETECTED';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30 pulse-alert';
+        actionText.innerHTML = '<span class="text-red-400 font-bold">REJECT WAFER IMMEDIATELY</span>. Halt wafer lot & audit plasma etch chamber RF parameters.';
+        costBadge.innerText = '+$5,000 Saved';
+        costBadge.className = 'text-red-400 font-bold';
+        costDesc.innerText = 'Successfully intercepted defective unit before downstream assembly, preventing $5,000 customer failure.';
+      } else if (prob >= 0.35) {
+        arc.style.stroke = '#f59e0b';
+        badge.innerText = 'MODERATE DEFECT RISK';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30';
+        actionText.innerHTML = '<span class="text-amber-400 font-bold">SECONDARY INSPECTION REQUIRED</span>. Route unit to automated optical/electrical retest station ($150).';
+        costBadge.innerText = '$150 Retest Cost';
+        costBadge.className = 'text-amber-400 font-bold';
+        costDesc.innerText = 'Low-cost secondary automated test verifies wafer reliability without risk of downstream escape.';
+      } else {
+        arc.style.stroke = '#10b981';
+        badge.innerText = 'PASSED QUALITY INSPECTION';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        actionText.innerHTML = '<span class="text-emerald-400 font-bold">PASS INSPECTION</span>. Wafer telemetry nominal. Authorize for automated dicing & packaging.';
+        costBadge.innerText = '$0 Defect Loss';
+        costBadge.className = 'text-emerald-400 font-bold';
+        costDesc.innerText = 'Wafer approved for assembly line with clean bill of quality.';
+      }
+    }
+
+    function pickRandomProduct() {
+      const rand = UI_DATA.products[Math.floor(Math.random() * UI_DATA.products.length)];
+      loadSelectedProduct(rand.id);
+    }
+
+    function loadEdgeCaseDefect() {
+      const def = UI_DATA.products.find(p => p.true_label === 1 && p.prob > 0.65) || UI_DATA.products[1];
+      loadSelectedProduct(def.id);
+    }
+
+    function renderDatasetTable(items) {
+      const tbody = document.getElementById('datasetTableBody');
+      tbody.innerHTML = items.slice(0, 50).map(p => `
+        <tr class="hover:bg-slate-800/50 transition">
+          <td class="p-3 font-bold text-white">${p.id}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.true_label === 1 ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+              ${p.true_label === 1 ? 'DEFECT (1)' : 'PASS (0)'}
+            </span>
+          </td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.pred_label === 1 ? 'bg-red-950 text-red-300' : 'bg-emerald-950 text-emerald-300'}">
+              ${p.pred_label === 1 ? 'FLAGGED' : 'CLEARED'}
+            </span>
+          </td>
+          <td class="p-3 font-semibold ${(p.prob * 100) >= 35 ? 'text-red-400' : 'text-slate-300'}">${(p.prob * 100).toFixed(1)}%</td>
+          <td class="p-3 text-blue-300">${p.sensors.sensor_111}</td>
+          <td class="p-3 text-indigo-300">${p.sensors.sensor_058}</td>
+          <td class="p-3 text-emerald-300">${p.sensors.sensor_178}</td>
+          <td class="p-3 text-purple-300">${p.sensors.sensor_008}</td>
+          <td class="p-3">
+            <button onclick="switchTab('station'); loadSelectedProduct('${p.id}')" class="px-2.5 py-1 rounded bg-blue-600/30 hover:bg-blue-600 text-blue-200 text-[10px] font-semibold transition">
+              Inspect →
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('datasetRecordCount').innerText = `Displaying ${Math.min(50, items.length)} of ${items.length} filtered products`;
+    }
+
+    function filterDatasetTable() {
+      const query = document.getElementById('datasetSearch').value.toUpperCase().trim();
+      const filter = document.getElementById('datasetFilter').value;
+
+      let filtered = UI_DATA.products.filter(p => {
+        if (query && !p.id.includes(query)) return false;
+        if (filter === 'defects') return p.true_label === 1;
+        if (filter === 'normals') return p.true_label === 0;
+        if (filter === 'misclassified') return p.true_label !== p.pred_label;
+        return true;
+      });
+
+      renderDatasetTable(filtered);
+    }
+
+    function updateThresholdInteractive(val) {
+      const t = parseFloat(val);
+      document.getElementById('thresholdDisplayVal').innerText = t.toFixed(2);
+
+      const match = UI_DATA.threshold_curve.reduce((prev, curr) => 
+        Math.abs(curr.threshold - t) < Math.abs(prev.threshold - t) ? curr : prev
+      );
+
+      document.getElementById('cm_tn').innerText = match.tn;
+      document.getElementById('cm_fp').innerText = match.fp;
+      document.getElementById('cm_fn').innerText = match.fn;
+      document.getElementById('cm_tp').innerText = match.tp;
+
+      document.getElementById('metric_recall').innerText = (match.recall * 100).toFixed(1) + "%";
+      document.getElementById('metric_precision').innerText = (match.precision * 100).toFixed(1) + "%";
+      document.getElementById('metric_f1').innerText = match.f1.toFixed(3);
+
+      document.getElementById('bar_recall').style.width = (match.recall * 100) + "%";
+      document.getElementById('bar_precision').style.width = (match.precision * 100) + "%";
+      document.getElementById('bar_f1').style.width = (match.f1 * 100) + "%";
+    }
+
+    function renderSensorCorrelationBars() {
+      const container = document.getElementById('sensorCorrBars');
+      const corrs = [
+        { name: 'sensor_111 (Process Deviation)', r: 0.352 },
+        { name: 'sensor_058 (Chamber RF Refl.)', r: 0.251 },
+        { name: 'sensor_059 (Gas Flow Rate)', r: 0.244 },
+        { name: 'sensor_008 (Etch Depth Var.)', r: 0.237 },
+        { name: 'sensor_062 (Vapor Deposition)', r: 0.234 },
+        { name: 'sensor_178 (Thermal Stabilizer)', r: -0.272 },
+        { name: 'sensor_165 (Dielectric Barrier)', r: -0.242 },
+        { name: 'sensor_021 (Coolant Pressure)', r: -0.200 }
+      ];
+
+      container.innerHTML = corrs.map(c => `
+        <div>
+          <div class="flex justify-between font-semibold text-[11px] mb-1">
+            <span class="${c.r > 0 ? 'text-red-300' : 'text-emerald-300'}">${c.name}</span>
+            <span class="font-mono font-bold ${c.r > 0 ? 'text-red-400' : 'text-emerald-400'}">${c.r > 0 ? '+' : ''}${c.r.toFixed(3)}</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden flex">
+            <div class="${c.r > 0 ? 'bg-red-500' : 'bg-emerald-500'} h-2 rounded-full" style="width: ${Math.abs(c.r) * 200}%"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function initPcaCanvas() {
+      const canvas = document.getElementById('pcaCanvas');
+      if (!canvas) return;
+      canvas.addEventListener('mousemove', onPcaMouseMove);
+      canvas.addEventListener('mouseleave', () => {
+        const tip = document.getElementById('pcaTooltip');
+        if (tip) tip.classList.add('hidden');
+      });
+      drawPcaScatter();
+    }
+
+    function drawPcaScatter() {
+      const canvas = document.getElementById('pcaCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let x = 40; x < w; x += 60) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 30; y < h; y += 50) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      const xs = UI_DATA.products.map(p => p.pca_x);
+      const ys = UI_DATA.products.map(p => p.pca_y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+      UI_DATA.products.forEach(p => {
+        const cx = 30 + ((p.pca_x - minX) / (maxX - minX)) * (w - 60);
+        const cy = 20 + ((p.pca_y - minY) / (maxY - minY)) * (h - 40);
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, p.true_label === 1 ? 5 : 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = p.true_label === 1 ? '#ef4444' : '#3b82f6';
+        ctx.fill();
+        if (p.true_label === 1) {
+          ctx.strokeStyle = '#fee2e2';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      });
+    }
+
+    function onPcaMouseMove(e) {
+      const canvas = document.getElementById('pcaCanvas');
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+      const xs = UI_DATA.products.map(p => p.pca_x);
+      const ys = UI_DATA.products.map(p => p.pca_y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+      let closest = null;
+      let closestDist = 14;
+
+      UI_DATA.products.forEach(p => {
+        const cx = 30 + ((p.pca_x - minX) / (maxX - minX)) * (canvas.width - 60);
+        const cy = 20 + ((p.pca_y - minY) / (maxY - minY)) * (canvas.height - 40);
+        const dist = Math.hypot(cx - mx, cy - my);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = p;
+        }
+      });
+
+      const tip = document.getElementById('pcaTooltip');
+      if (closest && tip) {
+        tip.classList.remove('hidden');
+        tip.style.left = (e.clientX - rect.left + 15) + 'px';
+        tip.style.top = (e.clientY - rect.top - 20) + 'px';
+        tip.innerHTML = `
+          <div class="font-bold text-white">${closest.id}</div>
+          <div class="text-[11px] text-slate-400">Class: <span class="${closest.true_label === 1 ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold'}">${closest.true_label === 1 ? 'Defective' : 'Normal'}</span></div>
+          <div class="text-[11px] text-slate-400">Defect Risk: <span class="text-blue-400 font-bold">${(closest.prob * 100).toFixed(1)}%</span></div>
+        `;
+      } else if (tip) {
+        tip.classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>

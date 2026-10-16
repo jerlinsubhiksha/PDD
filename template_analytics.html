@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DefectIQ — Product Defect & Data Visual Analytics Studio</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --card-border: #1f293d;
+      --accent: #3b82f6;
+    }
+    body {
+      background-color: var(--bg);
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .view-btn.active {
+      background-color: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+    }
+    .subtab-btn.active {
+      border-color: #3b82f6;
+      color: #60a5fa;
+      background-color: rgba(59, 130, 246, 0.12);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #27354f;
+      border-radius: 4px;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .pulse-alert {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased flex flex-col bg-slate-950 text-slate-100">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      
+      <!-- Brand & Mission -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">DefectIQ Analytics Studio</h1>
+            <span class="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">Visual ML Dashboard</span>
+          </div>
+          <p class="text-xs text-slate-400">Confusion Matrix • Bar Graphs • Statistical Graphs • 200×200 Data Table</p>
+        </div>
+      </div>
+
+      <!-- Live KPI Badges -->
+      <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1 md:pb-0 text-xs">
+        <div class="bg-slate-800 border border-slate-700/80 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-slate-400">Total Products:</span>
+          <span class="font-bold text-white ml-1">200</span>
+        </div>
+        <div class="bg-red-950/40 border border-red-800/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-red-300">Defects:</span>
+          <span class="font-bold text-red-400 ml-1">60 (30.0%)</span>
+        </div>
+        <div class="bg-emerald-950/40 border border-emerald-800/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-emerald-300">Normals:</span>
+          <span class="font-bold text-emerald-400 ml-1">140 (70.0%)</span>
+        </div>
+        <div class="bg-blue-950/40 border border-blue-800/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-blue-300">ROC-AUC:</span>
+          <span class="font-bold text-blue-400 ml-1">0.856 (CV)</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAIN NAVIGATION BAR (Visual Components) -->
+    <div class="max-w-7xl mx-auto mt-3 pt-2 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto custom-scroll text-xs font-semibold">
+      <button onclick="switchView('confusion')" id="view-btn-confusion" class="view-btn active px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🔲</span> 1. Confusion Matrix
+      </button>
+      <button onclick="switchView('bargraph')" id="view-btn-bargraph" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>📊</span> 2. Bar Graphs
+      </button>
+      <button onclick="switchView('graphs')" id="view-btn-graphs" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>📈</span> 3. Graphs (ROC, Boxplot, PCA)
+      </button>
+      <button onclick="switchView('table')" id="view-btn-table" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>📋</span> 4. Interactive Data Table
+      </button>
+      <button onclick="switchView('station')" id="view-btn-station" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🔬</span> 5. Live Inspection Station
+      </button>
+      <button onclick="switchView('lifecycle')" id="view-btn-lifecycle" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🔄</span> 6. Lifecycle Stepper (10 Steps)
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- ============================================================== -->
+    <!-- SECTION 1: CONFUSION MATRIX VISUALIZER                         -->
+    <!-- ============================================================== -->
+    <section id="section-confusion" class="space-y-6">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        
+        <!-- Header & Model Switcher -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>
+              <h2 class="text-lg font-bold text-white">Visual Confusion Matrix Studio</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Evaluate true positives, false alarms, and escaped defects with interactive threshold tuning</p>
+          </div>
+
+          <!-- Model Switcher Buttons -->
+          <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold overflow-x-auto">
+            <button onclick="selectModelCM(0)" id="cm-model-0" class="subtab-btn active px-3 py-1.5 rounded-lg border border-transparent transition whitespace-nowrap">
+              🏆 SVM (Champion)
+            </button>
+            <button onclick="selectModelCM(1)" id="cm-model-1" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition whitespace-nowrap">
+              Logistic Reg
+            </button>
+            <button onclick="selectModelCM(2)" id="cm-model-2" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition whitespace-nowrap">
+              Random Forest
+            </button>
+            <button onclick="selectModelCM(3)" id="cm-model-3" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition whitespace-nowrap">
+              XGBoost
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive Threshold Slider -->
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60 space-y-2">
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-semibold text-slate-300">Decision Threshold Tuning:</span>
+            <span id="cmThresholdVal" class="text-base font-mono font-bold text-blue-400">0.35</span>
+          </div>
+          <input type="range" id="cmSlider" min="0.05" max="0.95" step="0.05" value="0.35" oninput="onCmThresholdSlide(this.value)" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+          <div class="flex justify-between text-[11px] text-slate-500 font-mono">
+            <span>0.05 (Aggressive Defect Guard)</span>
+            <span class="text-blue-400 font-semibold">0.35 (Optimal Operating Point)</span>
+            <span>0.95 (Conservative Approval)</span>
+          </div>
+        </div>
+
+        <!-- 2x2 Heatmap Confusion Matrix Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          
+          <!-- Heatmap Matrix Grid (7 Cols) -->
+          <div class="lg:col-span-7 space-y-2">
+            <div class="text-center font-bold text-xs uppercase tracking-wider text-slate-400 pb-1">
+              Predicted Quality Status
+            </div>
+
+            <div class="flex items-center gap-3">
+              <!-- Left Vertical Label: Actual Status -->
+              <div class="writing-mode-vertical text-center font-bold text-xs uppercase tracking-wider text-slate-400 py-6" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                Actual Defect Status
+              </div>
+
+              <!-- Matrix 2x2 Cells -->
+              <div class="flex-1 grid grid-cols-2 gap-3">
+                
+                <!-- True Negative (Pass -> Pass) -->
+                <div class="bg-gradient-to-br from-emerald-950/40 to-slate-900 border-2 border-emerald-600/60 rounded-xl p-5 text-center transition hover:border-emerald-400 shadow-lg">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-emerald-400 uppercase">
+                    <span>True Negative (TN)</span>
+                    <span class="text-emerald-500">Normal ✓</span>
+                  </div>
+                  <div class="text-4xl font-black text-emerald-400 my-2" id="val_cm_tn">--</div>
+                  <div class="text-xs text-slate-300 font-semibold">Healthy Wafers Approved</div>
+                  <div class="text-[10px] text-slate-400 mt-1">$0 Scrap Loss • Cleared for Packaging</div>
+                </div>
+
+                <!-- False Positive (Pass -> Defect) -->
+                <div class="bg-gradient-to-br from-amber-950/40 to-slate-900 border-2 border-amber-600/60 rounded-xl p-5 text-center transition hover:border-amber-400 shadow-lg">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-amber-400 uppercase">
+                    <span>False Positive (FP)</span>
+                    <span class="text-amber-500">False Alarm ⚠</span>
+                  </div>
+                  <div class="text-4xl font-black text-amber-400 my-2" id="val_cm_fp">--</div>
+                  <div class="text-xs text-slate-300 font-semibold">Healthy Flagged for Retest</div>
+                  <div class="text-[10px] text-slate-400 mt-1">Cost: ~$150 per secondary re-test</div>
+                </div>
+
+                <!-- False Negative (Defect -> Pass) -->
+                <div class="bg-gradient-to-br from-red-950/40 to-slate-900 border-2 border-red-600/60 rounded-xl p-5 text-center transition hover:border-red-400 shadow-lg">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-red-400 uppercase">
+                    <span>False Negative (FN)</span>
+                    <span class="text-red-500">Escape Defect ❌</span>
+                  </div>
+                  <div class="text-4xl font-black text-red-400 my-2" id="val_cm_fn">--</div>
+                  <div class="text-xs text-slate-300 font-semibold">Defective Wafers Missed</div>
+                  <div class="text-[10px] text-red-300 mt-1 font-semibold">Severe Impact: $5,000 / escape failure</div>
+                </div>
+
+                <!-- True Positive (Defect -> Defect) -->
+                <div class="bg-gradient-to-br from-blue-950/40 to-slate-900 border-2 border-blue-600/60 rounded-xl p-5 text-center transition hover:border-blue-400 shadow-lg">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-blue-400 uppercase">
+                    <span>True Positive (TP)</span>
+                    <span class="text-blue-500">Caught Defect 🎯</span>
+                  </div>
+                  <div class="text-4xl font-black text-blue-400 my-2" id="val_cm_tp">--</div>
+                  <div class="text-xs text-slate-300 font-semibold">Defective Wafers Intercepted</div>
+                  <div class="text-[10px] text-blue-300 mt-1 font-semibold">Rejected early • Prevents Field Failures</div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Axis Footers -->
+            <div class="grid grid-cols-2 text-center text-xs text-slate-400 pt-1 font-mono">
+              <div>Predicted Normal (0)</div>
+              <div>Predicted Defect (1)</div>
+            </div>
+          </div>
+
+          <!-- Right 5 Cols: Financial & Metric Dials -->
+          <div class="lg:col-span-5 bg-slate-800/40 border border-slate-700/70 rounded-xl p-5 space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Statistical Performance Metrics</h3>
+            
+            <div class="space-y-3 text-xs">
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Defect Recall (Sensitivity):</span>
+                  <span id="cm_recall_text" class="font-bold text-blue-400 font-mono">--%</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="cm_recall_bar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Percentage of all actual defects captured</div>
+              </div>
+
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Defect Precision:</span>
+                  <span id="cm_precision_text" class="font-bold text-indigo-400 font-mono">--%</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="cm_precision_bar" class="bg-indigo-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Reliability of flagged defect alarms</div>
+              </div>
+
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Overall Accuracy:</span>
+                  <span id="cm_accuracy_text" class="font-bold text-emerald-400 font-mono">--%</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="cm_accuracy_bar" class="bg-emerald-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Cost Impact Calculation -->
+            <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 space-y-2 text-xs">
+              <div class="font-bold text-white flex justify-between">
+                <span>Cost Asymmetry Analysis:</span>
+                <span id="cm_cost_saved" class="text-emerald-400 font-bold">$0 Saved</span>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed" id="cm_cost_desc">
+                Catching defects early avoids downstream assembly losses while keeping secondary re-test expenses bounded.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 2: BAR GRAPHS STUDIO                                   -->
+    <!-- ============================================================== -->
+    <section id="section-bargraph" class="hidden space-y-6">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span>
+              <h2 class="text-lg font-bold text-white">Visual Bar Graph Analytics</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Explore feature correlations, mean telemetry discrepancies, and benchmark comparisons</p>
+          </div>
+
+          <!-- Bar Graph Mode Tabs -->
+          <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold">
+            <button onclick="switchBarView('correlation')" id="bar-tab-correlation" class="subtab-btn active px-3 py-1.5 rounded-lg border border-transparent transition">
+              1. Sensor Correlations
+            </button>
+            <button onclick="switchBarView('means')" id="bar-tab-means" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition">
+              2. Defect vs Normal Means
+            </button>
+            <button onclick="switchBarView('models')" id="bar-tab-models" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition">
+              3. Model Comparisons
+            </button>
+          </div>
+        </div>
+
+        <!-- BAR GRAPH CONTAINER 1: CORRELATIONS -->
+        <div id="bar-container-correlation" class="space-y-4">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-semibold">Top Sensor Pearson Correlations with Defect Status ($r \in [-1, 1]$):</span>
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1 text-red-400"><span class="w-2.5 h-2.5 bg-red-500 rounded"></span> Defect Driver (+)</span>
+              <span class="flex items-center gap-1 text-emerald-400"><span class="w-2.5 h-2.5 bg-emerald-500 rounded"></span> Process Stabilizer (-)</span>
+            </div>
+          </div>
+
+          <div class="space-y-3 bg-slate-950 p-5 rounded-xl border border-slate-800 text-xs" id="barCorrList">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- BAR GRAPH CONTAINER 2: DEFECT VS NORMAL MEANS -->
+        <div id="bar-container-means" class="hidden space-y-4">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-semibold">Mean Sensor Reading: Defective Products vs Normal Products</span>
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1 text-red-400"><span class="w-2.5 h-2.5 bg-red-500 rounded"></span> Defective Mean</span>
+              <span class="flex items-center gap-1 text-blue-400"><span class="w-2.5 h-2.5 bg-blue-500 rounded"></span> Normal Mean</span>
+            </div>
+          </div>
+
+          <div class="space-y-4 bg-slate-950 p-5 rounded-xl border border-slate-800 text-xs" id="barMeansList">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- BAR GRAPH CONTAINER 3: MODEL COMPARISONS -->
+        <div id="bar-container-models" class="hidden space-y-4">
+          <div class="text-xs text-slate-300 font-semibold">Multi-Algorithm Benchmark Performance Metrics Across Models</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="barModelsGrid">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 3: ADVANCED GRAPHS ("BRAPH")                           -->
+    <!-- ============================================================== -->
+    <section id="section-graphs" class="hidden space-y-6">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+              <h2 class="text-lg font-bold text-white">Advanced Graphs & Curve Visualizations</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">ROC Curve, Sensor Distribution Box Plots (Whiskers), and 2D Latent Feature Projections</p>
+          </div>
+
+          <!-- Graph Selector Tabs -->
+          <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold">
+            <button onclick="switchGraphSubtab('roc')" id="graph-tab-roc" class="subtab-btn active px-3 py-1.5 rounded-lg border border-transparent transition">
+              📈 ROC Curve
+            </button>
+            <button onclick="switchGraphSubtab('boxplot')" id="graph-tab-boxplot" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition">
+              📦 Sensor Boxplots
+            </button>
+            <button onclick="switchGraphSubtab('pca')" id="graph-tab-pca" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition">
+              🌌 PCA Latent Manifold
+            </button>
+          </div>
+        </div>
+
+        <!-- GRAPH 1: ROC CURVE (SVG GRAPH) -->
+        <div id="graph-container-roc" class="space-y-4">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            
+            <div class="lg:col-span-7 bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col items-center">
+              <div class="w-full flex justify-between text-xs text-slate-400 mb-2">
+                <span class="font-bold text-white">Receiver Operating Characteristic (ROC)</span>
+                <span class="font-mono text-emerald-400 font-bold">AUC = 0.8563</span>
+              </div>
+
+              <!-- SVG ROC Curve Diagram -->
+              <div class="w-full max-w-md aspect-square relative">
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                  <!-- Grid -->
+                  <line x1="10" y1="90" x2="90" y2="90" stroke="#1f293d" stroke-width="0.8"/>
+                  <line x1="10" y1="50" x2="90" y2="50" stroke="#1f293d" stroke-width="0.5" stroke-dasharray="2"/>
+                  <line x1="10" y1="10" x2="90" y2="10" stroke="#1f293d" stroke-width="0.8"/>
+                  <line x1="10" y1="90" x2="10" y2="10" stroke="#1f293d" stroke-width="0.8"/>
+                  <line x1="50" y1="90" x2="50" y2="10" stroke="#1f293d" stroke-width="0.5" stroke-dasharray="2"/>
+                  <line x1="90" y1="90" x2="90" y2="10" stroke="#1f293d" stroke-width="0.8"/>
+
+                  <!-- Diagonal Random Chance Baseline -->
+                  <line x1="10" y1="90" x2="90" y2="10" stroke="#475569" stroke-width="0.8" stroke-dasharray="2"/>
+
+                  <!-- Shaded Area Under Curve -->
+                  <polygon id="rocArea" points="10,90 10,90 90,90" fill="rgba(59, 130, 246, 0.15)"/>
+
+                  <!-- ROC Curve Path -->
+                  <path id="rocPath" d="M 10 90 L 90 10" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+
+                  <!-- Current Operating Threshold Point Marker -->
+                  <circle id="rocOperatingMarker" cx="35" cy="30" r="3" fill="#10b981" stroke="#ffffff" stroke-width="1"/>
+                </svg>
+                <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-1 px-2">
+                  <span>FPR: 0.0</span>
+                  <span>False Positive Rate (1 - Specificity)</span>
+                  <span>FPR: 1.0</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5 space-y-4 text-xs">
+              <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80 space-y-2">
+                <h4 class="font-bold text-white uppercase tracking-wider text-[11px]">ROC Curve Interpretation</h4>
+                <p class="text-slate-300 leading-relaxed">
+                  The ROC curve depicts the true positive rate (defects caught) versus false alarm rate across all potential thresholds.
+                </p>
+                <div class="pt-2 border-t border-slate-700 space-y-1 font-mono text-[11px]">
+                  <div class="flex justify-between"><span class="text-slate-400">Baseline (Random):</span><span class="text-slate-400">AUC = 0.500</span></div>
+                  <div class="flex justify-between"><span class="text-emerald-400 font-bold">SVM (Champion):</span><span class="text-emerald-400 font-bold">AUC = 0.8563</span></div>
+                  <div class="flex justify-between"><span class="text-indigo-400">Logistic Regression:</span><span class="text-indigo-400">AUC = 0.8346</span></div>
+                  <div class="flex justify-between"><span class="text-slate-400">Random Forest:</span><span class="text-slate-400">AUC = 0.7849</span></div>
+                </div>
+              </div>
+
+              <div class="bg-blue-950/30 p-4 rounded-xl border border-blue-800/40 text-blue-200">
+                <span class="font-bold">Green Marker:</span> Current operating point at threshold <strong>0.35</strong>, which maximizes the True Positive Rate while keeping False Alarms controlled.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- GRAPH 2: SENSOR BOX PLOTS (RANGE & WHISKER GRAPHS) -->
+        <div id="graph-container-boxplot" class="hidden space-y-4">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-semibold">Interquartile Range (IQR) & Min-Max Distribution: Normal vs Defective</span>
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1.5 text-blue-400"><span class="w-3 h-3 rounded bg-blue-600 inline-block"></span> Normal (Pass)</span>
+              <span class="flex items-center gap-1.5 text-red-400"><span class="w-3 h-3 rounded bg-red-600 inline-block"></span> Defective (Fail)</span>
+            </div>
+          </div>
+
+          <div class="space-y-4" id="boxplotsContainer">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- GRAPH 3: PCA 2D SCATTER GRAPH -->
+        <div id="graph-container-pca" class="hidden space-y-4">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col items-center">
+            <div class="w-full flex justify-between text-xs text-slate-400 mb-2">
+              <span class="font-bold text-white">PCA 2D Latent Feature Manifold (200 Products)</span>
+              <span>PC1: 13.7% Var • PC2: 5.4% Var</span>
+            </div>
+            <div class="relative w-full flex items-center justify-center">
+              <canvas id="pcaCanvasSub" width="600" height="340" class="w-full cursor-crosshair"></canvas>
+              <div id="pcaTooltipSub" class="absolute hidden bg-slate-900 border border-slate-700 text-white text-xs p-2.5 rounded-lg shadow-xl pointer-events-none"></div>
+            </div>
+            <div class="flex justify-between w-full text-xs text-slate-500 pt-2 font-mono">
+              <span>PC1 Axis (Global Sensor Variance)</span>
+              <div class="flex items-center gap-3">
+                <span class="text-blue-400">● 140 Normal Wafers</span>
+                <span class="text-red-400 font-bold">● 60 Defective Wafers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 4: INTERACTIVE DATA TABLE                              -->
+    <!-- ============================================================== -->
+    <section id="section-table" class="hidden space-y-5">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span>
+              <h2 class="text-lg font-bold text-white">Product Defect Data Table (200 Units)</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Explore each wafer's ground truth, predicted risk, and key sensor readings</p>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="mainSearchInput" placeholder="Search by Product ID..." oninput="onMainTableFilter()" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="mainFilterSelect" onchange="onMainTableFilter()" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-xs outline-none">
+              <option value="all">All Units (200)</option>
+              <option value="defects">Defective Only (60)</option>
+              <option value="normals">Normal Only (140)</option>
+              <option value="tp">True Positives (Caught Defects)</option>
+              <option value="fn">False Negatives (Escaped Defects)</option>
+              <option value="fp">False Positives (False Alarms)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table Viewport -->
+        <div class="overflow-x-auto custom-scroll border border-slate-800 rounded-xl max-h-[500px]">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-800/90 sticky top-0 z-10 text-slate-300 font-semibold border-b border-slate-700">
+              <tr>
+                <th onclick="sortTable('id')" class="p-3 cursor-pointer hover:text-white whitespace-nowrap">Product ID ⬍</th>
+                <th onclick="sortTable('true_label')" class="p-3 cursor-pointer hover:text-white whitespace-nowrap">Actual Status ⬍</th>
+                <th onclick="sortTable('pred_label')" class="p-3 cursor-pointer hover:text-white whitespace-nowrap">Verdict ⬍</th>
+                <th onclick="sortTable('prob')" class="p-3 cursor-pointer hover:text-white whitespace-nowrap">Defect Risk % ⬍</th>
+                <th class="p-3 font-mono text-blue-400 whitespace-nowrap">sensor_111</th>
+                <th class="p-3 font-mono text-indigo-400 whitespace-nowrap">sensor_058</th>
+                <th class="p-3 font-mono text-emerald-400 whitespace-nowrap">sensor_178</th>
+                <th class="p-3 font-mono text-purple-400 whitespace-nowrap">sensor_008</th>
+                <th class="p-3 whitespace-nowrap">Inspection</th>
+              </tr>
+            </thead>
+            <tbody id="mainTableBody" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination & Stats Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 pt-2 gap-3">
+          <div id="tableRecordCount">Showing 1-25 of 200 products</div>
+          <div class="flex items-center gap-2">
+            <button onclick="prevTablePage()" id="prevPageBtn" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50">Previous</button>
+            <span id="pageIndicator" class="px-2 font-mono">Page 1 / 8</span>
+            <button onclick="nextTablePage()" id="nextPageBtn" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50">Next</button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 5: LIVE INSPECTION STATION (INFERENCE)                 -->
+    <!-- ============================================================== -->
+    <section id="section-station" class="hidden space-y-6">
+      <!-- Station Content (Same robust station as before) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <h2 class="text-base font-bold text-white">Production Line Quality Inspection Station</h2>
+              <p class="text-xs text-slate-400">Select any manufactured unit or simulate live telemetry drift</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Pipeline Live (&lt;2ms)
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-slate-400 mb-1">Select Manufactured Unit (200 Total):</label>
+              <select id="stationProductSelect" onchange="onStationProductSelect(this.value)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              </select>
+            </div>
+            <div class="flex items-end gap-2">
+              <button onclick="pickStationRandom()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg py-2 text-xs font-semibold transition">
+                🎲 Random
+              </button>
+              <button onclick="pickStationDefect()" class="w-full bg-red-950/60 hover:bg-red-900/80 text-red-200 border border-red-800/80 rounded-lg py-2 text-xs font-semibold transition">
+                ⚠️ Defect Spike
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-4 pt-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Telemetry Adjustment Sliders</h3>
+            
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-blue-400">sensor_111</span>
+                  <span class="text-slate-400 ml-1.5">(Critical Inline Process Deviation)</span>
+                </div>
+                <span id="st_val_111" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="st_slider_111" min="-3" max="3" step="0.1" value="0" oninput="onStationSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-indigo-400">sensor_058</span>
+                  <span class="text-slate-400 ml-1.5">(Chamber RF Reflection Anomaly)</span>
+                </div>
+                <span id="st_val_058" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="st_slider_058" min="-3" max="3" step="0.1" value="0" oninput="onStationSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-emerald-400">sensor_178</span>
+                  <span class="text-slate-400 ml-1.5">(Thermal Stabilizer - Protective Signal)</span>
+                </div>
+                <span id="st_val_178" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="st_slider_178" min="-3" max="3" step="0.1" value="0" oninput="onStationSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 flex flex-col gap-5">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center shadow-xl space-y-4 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="text-xs uppercase font-bold tracking-wider text-slate-400 mb-1">Real-Time Inspection Verdict</div>
+              <div id="st_verdictBadge" class="inline-block px-4 py-1.5 rounded-full text-sm font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                PASSED QUALITY INSPECTION
+              </div>
+            </div>
+
+            <div class="relative w-48 h-28 mx-auto my-2">
+              <svg viewBox="0 0 100 55" class="w-full h-full">
+                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#1f293d" stroke-width="8" stroke-linecap="round"/>
+                <path id="st_gaugeArc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="125.6" stroke-dashoffset="125.6" stroke-linecap="round" class="transition-all duration-300"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-end pb-1">
+                <span id="st_gaugeText" class="text-3xl font-extrabold text-white">0.0%</span>
+                <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Defect Risk</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-3.5 text-left text-xs space-y-1">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Engineering Protocol:</div>
+              <div id="st_actionText" class="font-semibold text-slate-200">Wafer within statistical control limits. Authorize for automated dicing & packaging.</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-800 text-left">
+              <div>
+                <span class="text-slate-400">Ground Truth:</span>
+                <div id="st_groundTruth" class="font-bold text-white">Normal (0)</div>
+              </div>
+              <div>
+                <span class="text-slate-400">Cutoff:</span>
+                <div class="font-bold text-blue-400">0.35 (Recall Guard)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 6: LIFECYCLE STEPPER (10 STEPS)                        -->
+    <!-- ============================================================== -->
+    <section id="section-lifecycle" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <h2 class="text-base font-bold text-white">The Data Science Lifecycle: 10 Steps</h2>
+            <p class="text-xs text-slate-400">"It is a cycle, not a line. What we learn in later steps often sends us back to earlier ones."</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            10/10 Complete
+          </span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="mainLifecycleGrid"></div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5" id="mainLifecycleDetail"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- WAFER INSPECTION MODAL -->
+  <div id="waferModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+          <h3 class="text-base font-bold text-white" id="modalTitle">PROD_001 Quality Inspection</h3>
+        </div>
+        <button onclick="closeWaferModal()" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <div id="modalBody" class="space-y-3 text-xs">
+        <!-- Injected via JS -->
+      </div>
+      <div class="pt-3 border-t border-slate-800 flex justify-end">
+        <button onclick="closeWaferModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs">Close Inspection</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-slate-800/80 bg-slate-900/60 text-xs text-slate-500 py-4 px-6 text-center">
+    DefectIQ Studio • Visual Confusion Matrix • Bar Graphs • Statistical Curves • Data Table
+  </footer>
+
+  <script>
+    const UI_DATA = __UI_DATA_JSON__;
+
+    let currentModelIndex = 0;
+    let currentTableData = [...UI_DATA.products];
+    let currentTablePage = 1;
+    const tablePageSize = 25;
+    let sortColumn = 'id';
+    let sortAsc = true;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Initialize Confusion Matrix
+      onCmThresholdSlide(0.35);
+      
+      // Initialize Bar Graphs
+      renderCorrelationBars();
+      renderMeansBars();
+      renderModelBars();
+
+      // Initialize Graphs
+      renderRocCurve();
+      renderBoxplots();
+      initPcaCanvas();
+
+      // Initialize Table
+      renderTablePage();
+
+      // Initialize Station
+      initStation();
+
+      // Initialize Lifecycle
+      renderLifecycle();
+    });
+
+    // View Navigation Switcher
+    function switchView(viewName) {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`view-btn-${viewName}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      ['confusion', 'bargraph', 'graphs', 'table', 'station', 'lifecycle'].forEach(v => {
+        const el = document.getElementById(`section-${v}`);
+        if (el) {
+          if (v === viewName) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+
+      if (viewName === 'graphs') {
+        setTimeout(drawPcaSub, 50);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 1: CONFUSION MATRIX FUNCTIONS
+    // -------------------------------------------------------------
+    function selectModelCM(idx) {
+      currentModelIndex = idx;
+      document.querySelectorAll('[id^="cm-model-"]').forEach((b, i) => {
+        if (i === idx) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+
+      const m = UI_DATA.model_comparisons[idx];
+      document.getElementById('val_cm_tn').innerText = m.tn;
+      document.getElementById('val_cm_fp').innerText = m.fp;
+      document.getElementById('val_cm_fn').innerText = m.fn;
+      document.getElementById('val_cm_tp').innerText = m.tp;
+
+      document.getElementById('cm_recall_text').innerText = (m.recall * 100).toFixed(1) + "%";
+      document.getElementById('cm_recall_bar').style.width = (m.recall * 100) + "%";
+
+      document.getElementById('cm_precision_text').innerText = (m.precision * 100).toFixed(1) + "%";
+      document.getElementById('cm_precision_bar').style.width = (m.precision * 100) + "%";
+
+      document.getElementById('cm_accuracy_text').innerText = (m.accuracy * 100).toFixed(1) + "%";
+      document.getElementById('cm_accuracy_bar').style.width = (m.accuracy * 100) + "%";
+
+      const saved = m.tp * 5000;
+      document.getElementById('cm_cost_saved').innerText = `+$${saved.toLocaleString()} Saved`;
+      document.getElementById('cm_cost_desc').innerText = `${m.name}: Caught ${m.tp} defects early, preventing $${saved.toLocaleString()} in downstream manufacturing losses.`;
+    }
+
+    function onCmThresholdSlide(val) {
+      const t = parseFloat(val);
+      document.getElementById('cmThresholdVal').innerText = t.toFixed(2);
+
+      const match = UI_DATA.threshold_curve.reduce((prev, curr) => 
+        Math.abs(curr.threshold - t) < Math.abs(prev.threshold - t) ? curr : prev
+      );
+
+      document.getElementById('val_cm_tn').innerText = match.tn;
+      document.getElementById('val_cm_fp').innerText = match.fp;
+      document.getElementById('val_cm_fn').innerText = match.fn;
+      document.getElementById('val_cm_tp').innerText = match.tp;
+
+      document.getElementById('cm_recall_text').innerText = (match.recall * 100).toFixed(1) + "%";
+      document.getElementById('cm_recall_bar').style.width = (match.recall * 100) + "%";
+
+      document.getElementById('cm_precision_text').innerText = (match.precision * 100).toFixed(1) + "%";
+      document.getElementById('cm_precision_bar').style.width = (match.precision * 100) + "%";
+
+      document.getElementById('cm_accuracy_text').innerText = (match.accuracy * 100).toFixed(1) + "%";
+      document.getElementById('cm_accuracy_bar').style.width = (match.accuracy * 100) + "%";
+
+      const saved = match.tp * 5000;
+      const retestCost = match.fp * 150;
+      document.getElementById('cm_cost_saved').innerText = `+$${saved.toLocaleString()} Saved`;
+      document.getElementById('cm_cost_desc').innerText = `Intercepted ${match.tp} defects (preventing $${saved.toLocaleString()} escape costs) while incurring $${retestCost.toLocaleString()} in secondary automated retests.`;
+
+      // Update ROC operating marker position if ROC exists
+      updateRocMarker(match.fp / (match.fp + match.tn || 1), match.recall);
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 2: BAR GRAPHS FUNCTIONS
+    // -------------------------------------------------------------
+    function switchBarView(tabName) {
+      document.querySelectorAll('[id^="bar-tab-"]').forEach(b => b.classList.remove('active'));
+      const active = document.getElementById(`bar-tab-${tabName}`);
+      if (active) active.classList.add('active');
+
+      ['correlation', 'means', 'models'].forEach(t => {
+        const el = document.getElementById(`bar-container-${t}`);
+        if (el) {
+          if (t === tabName) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+    }
+
+    function renderCorrelationBars() {
+      const container = document.getElementById('barCorrList');
+      const corrs = [
+        { name: 'sensor_111 (Critical Process Deviation)', r: 0.352 },
+        { name: 'sensor_058 (Chamber RF Reflection Anomaly)', r: 0.251 },
+        { name: 'sensor_059 (Chemical Vapor Flow Rate)', r: 0.244 },
+        { name: 'sensor_008 (Plasma Etch Depth Variance)', r: 0.237 },
+        { name: 'sensor_062 (Vapor Deposition Uniformity)', r: 0.234 },
+        { name: 'sensor_178 (Thermal Process Stabilizer)', r: -0.272 },
+        { name: 'sensor_165 (Dielectric Isolation Barrier)', r: -0.242 },
+        { name: 'sensor_021 (Coolant Chamber Pressure)', r: -0.200 }
+      ];
+
+      container.innerHTML = corrs.map(c => `
+        <div class="space-y-1">
+          <div class="flex justify-between font-semibold text-[11px]">
+            <span class="${c.r > 0 ? 'text-red-300' : 'text-emerald-300'}">${c.name}</span>
+            <span class="font-mono font-bold ${c.r > 0 ? 'text-red-400' : 'text-emerald-400'}">${c.r > 0 ? '+' : ''}${c.r.toFixed(3)}</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden flex">
+            <div class="${c.r > 0 ? 'bg-red-500' : 'bg-emerald-500'} h-2.5 rounded-full transition-all duration-500" style="width: ${Math.abs(c.r) * 200}%"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderMeansBars() {
+      const container = document.getElementById('barMeansList');
+      const sensors = ['sensor_111', 'sensor_058', 'sensor_059', 'sensor_008', 'sensor_178', 'sensor_165'];
+
+      container.innerHTML = sensors.map(s => {
+        const stats = UI_DATA.boxplot_data[s];
+        const maxVal = Math.max(stats.defect.mean, stats.normal.mean, 1);
+        const defPct = Math.min(100, Math.max(10, (stats.defect.mean / maxVal) * 100));
+        const normPct = Math.min(100, Math.max(10, (stats.normal.mean / maxVal) * 100));
+
+        return `
+          <div class="space-y-2 pb-3 border-b border-slate-800/80">
+            <div class="flex justify-between font-mono font-bold text-slate-300">
+              <span class="text-blue-400">${s}</span>
+              <span class="text-slate-400 font-normal text-[11px]">Defect Mean: <strong class="text-red-400">${stats.defect.mean}</strong> vs Normal: <strong class="text-blue-400">${stats.normal.mean}</strong></span>
+            </div>
+            
+            <div class="space-y-1 text-[10px]">
+              <div class="flex items-center gap-2">
+                <span class="w-16 font-mono text-red-400">Defect:</span>
+                <div class="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-red-500 h-2 rounded-full" style="width: ${defPct}%"></div>
+                </div>
+                <span class="font-mono text-slate-400">${stats.defect.mean}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-16 font-mono text-blue-400">Normal:</span>
+                <div class="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-blue-500 h-2 rounded-full" style="width: ${normPct}%"></div>
+                </div>
+                <span class="font-mono text-slate-400">${stats.normal.mean}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderModelBars() {
+      const grid = document.getElementById('barModelsGrid');
+      grid.innerHTML = UI_DATA.model_comparisons.map(m => `
+        <div class="bg-slate-950 p-4 rounded-xl border ${m.champion ? 'border-blue-500/80 shadow-lg shadow-blue-500/10' : 'border-slate-800'} space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-white text-xs">${m.name}</span>
+            ${m.champion ? '<span class="px-2 py-0.5 rounded text-[10px] bg-blue-500 text-white font-bold">Champion</span>' : ''}
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-400">ROC-AUC:</span>
+                <span class="font-mono font-bold text-emerald-400">${m.auc.toFixed(4)}</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-1.5" style="width: ${m.auc * 100}%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-400">Defect Recall (Catch Rate):</span>
+                <span class="font-mono font-bold text-blue-400">${(m.recall * 100).toFixed(1)}%</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-blue-500 h-1.5" style="width: ${m.recall * 100}%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-400">Test Accuracy:</span>
+                <span class="font-mono font-bold text-purple-400">${(m.accuracy * 100).toFixed(1)}%</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-purple-500 h-1.5" style="width: ${m.accuracy * 100}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 3: ADVANCED GRAPHS FUNCTIONS
+    // -------------------------------------------------------------
+    function switchGraphSubtab(tabName) {
+      document.querySelectorAll('[id^="graph-tab-"]').forEach(b => b.classList.remove('active'));
+      const active = document.getElementById(`graph-tab-${tabName}`);
+      if (active) active.classList.add('active');
+
+      ['roc', 'boxplot', 'pca'].forEach(t => {
+        const el = document.getElementById(`graph-container-${t}`);
+        if (el) {
+          if (t === tabName) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+
+      if (tabName === 'pca') {
+        setTimeout(drawPcaSub, 50);
+      }
+    }
+
+    function renderRocCurve() {
+      const pts = UI_DATA.roc_points;
+      if (!pts || !pts.length) return;
+
+      // Map (fpr, tpr) to SVG coords: (10, 90) is (0, 0), (90, 10) is (1, 1)
+      const mapped = pts.map(p => ({
+        x: 10 + (p.fpr * 80),
+        y: 90 - (p.tpr * 80)
+      }));
+
+      // Path
+      let d = `M ${mapped[0].x} ${mapped[0].y}`;
+      for (let i = 1; i < mapped.length; i++) {
+        d += ` L ${mapped[i].x} ${mapped[i].y}`;
+      }
+      document.getElementById('rocPath').setAttribute('d', d);
+
+      // Area
+      let areaPts = `10,90 ${mapped.map(m => `${m.x},${m.y}`).join(' ')} 90,90`;
+      document.getElementById('rocArea').setAttribute('points', areaPts);
+    }
+
+    function updateRocMarker(fpr, tpr) {
+      const mx = 10 + (Math.max(0, Math.min(1, fpr)) * 80);
+      const my = 90 - (Math.max(0, Math.min(1, tpr)) * 80);
+      const marker = document.getElementById('rocOperatingMarker');
+      if (marker) {
+        marker.setAttribute('cx', mx);
+        marker.setAttribute('cy', my);
+      }
+    }
+
+    function renderBoxplots() {
+      const container = document.getElementById('boxplotsContainer');
+      const sensors = ['sensor_111', 'sensor_058', 'sensor_178', 'sensor_008'];
+
+      container.innerHTML = sensors.map(s => {
+        const d = UI_DATA.boxplot_data[s];
+        const overallMin = Math.min(d.normal.min, d.defect.min);
+        const overallMax = Math.max(d.normal.max, d.defect.max);
+        const range = overallMax - overallMin || 1;
+
+        const toPct = val => Math.max(0, Math.min(100, ((val - overallMin) / range) * 100));
+
+        return `
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-white font-mono">${s}</span>
+              <span class="text-slate-400 text-[11px]">Range: [${overallMin} to ${overallMax}]</span>
+            </div>
+
+            <!-- Normal Wafer Boxplot Row -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] text-blue-400 font-mono">
+                <span>Normal Wafers</span>
+                <span>Median: ${d.normal.median} (Q1: ${d.normal.q1}, Q3: ${d.normal.q3})</span>
+              </div>
+              <div class="relative w-full h-5 bg-slate-900 rounded border border-slate-800">
+                <!-- Whisker Line -->
+                <div class="absolute top-2.5 h-0.5 bg-blue-500/50" style="left: ${toPct(d.normal.min)}%; width: ${toPct(d.normal.max) - toPct(d.normal.min)}%;"></div>
+                <!-- IQR Box -->
+                <div class="absolute top-1 h-3 bg-blue-600/60 border border-blue-400 rounded-sm" style="left: ${toPct(d.normal.q1)}%; width: ${toPct(d.normal.q3) - toPct(d.normal.q1)}%;"></div>
+                <!-- Median Bar -->
+                <div class="absolute top-0.5 h-4 w-1 bg-white rounded" style="left: ${toPct(d.normal.median)}%;"></div>
+              </div>
+            </div>
+
+            <!-- Defective Wafer Boxplot Row -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] text-red-400 font-mono">
+                <span>Defective Wafers</span>
+                <span>Median: ${d.defect.median} (Q1: ${d.defect.q1}, Q3: ${d.defect.q3})</span>
+              </div>
+              <div class="relative w-full h-5 bg-slate-900 rounded border border-slate-800">
+                <!-- Whisker Line -->
+                <div class="absolute top-2.5 h-0.5 bg-red-500/50" style="left: ${toPct(d.defect.min)}%; width: ${toPct(d.defect.max) - toPct(d.defect.min)}%;"></div>
+                <!-- IQR Box -->
+                <div class="absolute top-1 h-3 bg-red-600/60 border border-red-400 rounded-sm" style="left: ${toPct(d.defect.q1)}%; width: ${toPct(d.defect.q3) - toPct(d.defect.q1)}%;"></div>
+                <!-- Median Bar -->
+                <div class="absolute top-0.5 h-4 w-1 bg-white rounded" style="left: ${toPct(d.defect.median)}%;"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function initPcaCanvas() {
+      const canvas = document.getElementById('pcaCanvasSub');
+      if (!canvas) return;
+      canvas.addEventListener('mousemove', onPcaMouseMoveSub);
+      canvas.addEventListener('mouseleave', () => {
+        const tip = document.getElementById('pcaTooltipSub');
+        if (tip) tip.classList.add('hidden');
+      });
+      drawPcaSub();
+    }
+
+    function drawPcaSub() {
+      const canvas = document.getElementById('pcaCanvasSub');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Grid
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let x = 40; x < w; x += 60) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 30; y < h; y += 50) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      const xs = UI_DATA.products.map(p => p.pca_x);
+      const ys = UI_DATA.products.map(p => p.pca_y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+      UI_DATA.products.forEach(p => {
+        const cx = 30 + ((p.pca_x - minX) / (maxX - minX)) * (w - 60);
+        const cy = 20 + ((p.pca_y - minY) / (maxY - minY)) * (h - 40);
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, p.true_label === 1 ? 5 : 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = p.true_label === 1 ? '#ef4444' : '#3b82f6';
+        ctx.fill();
+        if (p.true_label === 1) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      });
+    }
+
+    function onPcaMouseMoveSub(e) {
+      const canvas = document.getElementById('pcaCanvasSub');
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+      const xs = UI_DATA.products.map(p => p.pca_x);
+      const ys = UI_DATA.products.map(p => p.pca_y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+      let closest = null;
+      let closestDist = 14;
+
+      UI_DATA.products.forEach(p => {
+        const cx = 30 + ((p.pca_x - minX) / (maxX - minX)) * (canvas.width - 60);
+        const cy = 20 + ((p.pca_y - minY) / (maxY - minY)) * (canvas.height - 40);
+        const dist = Math.hypot(cx - mx, cy - my);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = p;
+        }
+      });
+
+      const tip = document.getElementById('pcaTooltipSub');
+      if (closest && tip) {
+        tip.classList.remove('hidden');
+        tip.style.left = (e.clientX - rect.left + 15) + 'px';
+        tip.style.top = (e.clientY - rect.top - 20) + 'px';
+        tip.innerHTML = `
+          <div class="font-bold text-white">${closest.id}</div>
+          <div class="text-[11px] text-slate-400">Actual: <span class="${closest.true_label === 1 ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold'}">${closest.true_label === 1 ? 'Defective' : 'Normal'}</span></div>
+          <div class="text-[11px] text-slate-400">Risk: <span class="text-blue-400 font-bold">${(closest.prob * 100).toFixed(1)}%</span></div>
+        `;
+      } else if (tip) {
+        tip.classList.add('hidden');
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 4: TABLE FUNCTIONS
+    // -------------------------------------------------------------
+    function onMainTableFilter() {
+      const q = document.getElementById('mainSearchInput').value.toUpperCase().trim();
+      const f = document.getElementById('mainFilterSelect').value;
+
+      currentTableData = UI_DATA.products.filter(p => {
+        if (q && !p.id.includes(q)) return false;
+        if (f === 'defects') return p.true_label === 1;
+        if (f === 'normals') return p.true_label === 0;
+        if (f === 'tp') return p.true_label === 1 && p.pred_label === 1;
+        if (f === 'fn') return p.true_label === 1 && p.pred_label === 0;
+        if (f === 'fp') return p.true_label === 0 && p.pred_label === 1;
+        return true;
+      });
+
+      currentTablePage = 1;
+      renderTablePage();
+    }
+
+    function sortTable(col) {
+      if (sortColumn === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortColumn = col;
+        sortAsc = true;
+      }
+
+      currentTableData.sort((a, b) => {
+        let v1 = a[col];
+        let v2 = b[col];
+        if (typeof v1 === 'string') {
+          return sortAsc ? v1.localeCompare(v2) : v2.localeCompare(v1);
+        }
+        return sortAsc ? v1 - v2 : v2 - v1;
+      });
+
+      renderTablePage();
+    }
+
+    function renderTablePage() {
+      const tbody = document.getElementById('mainTableBody');
+      const startIdx = (currentTablePage - 1) * tablePageSize;
+      const endIdx = startIdx + tablePageSize;
+      const pageItems = currentTableData.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageItems.map(p => {
+        const riskPct = (p.prob * 100).toFixed(1);
+        const isCaught = p.true_label === 1 && p.pred_label === 1;
+        const isEscaped = p.true_label === 1 && p.pred_label === 0;
+
+        return `
+          <tr class="hover:bg-slate-800/50 transition">
+            <td class="p-3 font-bold text-white">${p.id}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.true_label === 1 ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+                ${p.true_label === 1 ? 'DEFECT (1)' : 'PASS (0)'}
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.pred_label === 1 ? 'bg-red-950 text-red-300' : 'bg-emerald-950 text-emerald-300'}">
+                ${p.pred_label === 1 ? 'REJECT' : 'APPROVE'}
+              </span>
+            </td>
+            <td class="p-3">
+              <div class="flex items-center gap-2">
+                <div class="w-16 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div class="${p.prob >= 0.5 ? 'bg-red-500' : p.prob >= 0.35 ? 'bg-amber-500' : 'bg-emerald-500'} h-1.5" style="width: ${riskPct}%"></div>
+                </div>
+                <span class="font-bold ${p.prob >= 0.35 ? 'text-red-400' : 'text-slate-300'}">${riskPct}%</span>
+              </div>
+            </td>
+            <td class="p-3 text-blue-300">${p.sensors.sensor_111}</td>
+            <td class="p-3 text-indigo-300">${p.sensors.sensor_058}</td>
+            <td class="p-3 text-emerald-300">${p.sensors.sensor_178}</td>
+            <td class="p-3 text-purple-300">${p.sensors.sensor_008}</td>
+            <td class="p-3">
+              <button onclick="openWaferModal('${p.id}')" class="px-2.5 py-1 rounded bg-blue-600/30 hover:bg-blue-600 text-blue-200 text-[10px] font-semibold transition">
+                Inspect ↗
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Update counters
+      const total = currentTableData.length;
+      const totalPages = Math.max(1, Math.ceil(total / tablePageSize));
+      document.getElementById('tableRecordCount').innerText = `Displaying ${startIdx + 1}–${Math.min(endIdx, total)} of ${total} products`;
+      document.getElementById('pageIndicator').innerText = `Page ${currentTablePage} / ${totalPages}`;
+      document.getElementById('prevPageBtn').disabled = currentTablePage <= 1;
+      document.getElementById('nextPageBtn').disabled = currentTablePage >= totalPages;
+    }
+
+    function prevTablePage() {
+      if (currentTablePage > 1) {
+        currentTablePage--;
+        renderTablePage();
+      }
+    }
+
+    function nextTablePage() {
+      const totalPages = Math.ceil(currentTableData.length / tablePageSize);
+      if (currentTablePage < totalPages) {
+        currentTablePage++;
+        renderTablePage();
+      }
+    }
+
+    function openWaferModal(id) {
+      const p = UI_DATA.products.find(x => x.id === id);
+      if (!p) return;
+
+      document.getElementById('modalTitle').innerText = `${p.id} Quality Telemetry Report`;
+      document.getElementById('modalBody').innerHTML = `
+        <div class="grid grid-cols-2 gap-3 p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <div>
+            <span class="text-slate-400">Actual Quality Status:</span>
+            <div class="text-sm font-bold ${p.true_label === 1 ? 'text-red-400' : 'text-emerald-400'}">${p.true_label === 1 ? 'DEFECTIVE PRODUCT (1)' : 'NORMAL PRODUCT (0)'}</div>
+          </div>
+          <div>
+            <span class="text-slate-400">Predicted Defect Risk:</span>
+            <div class="text-sm font-bold ${p.prob >= 0.35 ? 'text-red-400' : 'text-emerald-400'}">${(p.prob * 100).toFixed(1)}% (${p.pred_label === 1 ? 'FLAGGED' : 'PASSED'})</div>
+          </div>
+        </div>
+
+        <div class="space-y-1.5 pt-2">
+          <div class="font-bold text-white uppercase text-[11px]">Primary Telemetry Measurements:</div>
+          <div class="grid grid-cols-2 gap-2 font-mono text-[11px]">
+            <div class="p-2 bg-slate-800/60 rounded border border-slate-700">sensor_111: <span class="text-blue-300 font-bold">${p.sensors.sensor_111}</span></div>
+            <div class="p-2 bg-slate-800/60 rounded border border-slate-700">sensor_058: <span class="text-indigo-300 font-bold">${p.sensors.sensor_058}</span></div>
+            <div class="p-2 bg-slate-800/60 rounded border border-slate-700">sensor_178: <span class="text-emerald-300 font-bold">${p.sensors.sensor_178}</span></div>
+            <div class="p-2 bg-slate-800/60 rounded border border-slate-700">sensor_008: <span class="text-purple-300 font-bold">${p.sensors.sensor_008}</span></div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('waferModal').classList.remove('hidden');
+    }
+
+    function closeWaferModal() {
+      document.getElementById('waferModal').classList.add('hidden');
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 5: LIVE STATION FUNCTIONS
+    // -------------------------------------------------------------
+    function initStation() {
+      const select = document.getElementById('stationProductSelect');
+      select.innerHTML = UI_DATA.products.map(p => `
+        <option value="${p.id}">${p.id} — ${p.true_label === 1 ? '[DEFECTIVE]' : '[NORMAL]'} (${(p.prob * 100).toFixed(1)}% Risk)</option>
+      `).join('');
+      onStationProductSelect(UI_DATA.products[0].id);
+    }
+
+    function onStationProductSelect(id) {
+      const p = UI_DATA.products.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('stationProductSelect').value = id;
+
+      setStationSlider('111', p.sensors.sensor_111, UI_DATA.sensor_stats.sensor_111);
+      setStationSlider('058', p.sensors.sensor_058, UI_DATA.sensor_stats.sensor_058);
+      setStationSlider('178', p.sensors.sensor_178, UI_DATA.sensor_stats.sensor_178);
+
+      document.getElementById('st_groundTruth').innerText = p.true_label === 1 ? 'DEFECTIVE (1)' : 'NORMAL / PASS (0)';
+      document.getElementById('st_groundTruth').className = p.true_label === 1 ? 'font-bold text-red-400' : 'font-bold text-emerald-400';
+
+      updateStationGauge(p.prob);
+    }
+
+    function setStationSlider(code, val, stats) {
+      const z = (val - stats.mean) / (Math.abs(stats.max - stats.min) / 4 || 1);
+      const clampedZ = Math.max(-3, Math.min(3, z));
+      document.getElementById(`st_slider_${code}`).value = clampedZ.toFixed(1);
+      document.getElementById(`st_val_${code}`).innerText = `${val} (${clampedZ >= 0 ? '+' : ''}${clampedZ.toFixed(1)}σ)`;
+    }
+
+    function onStationSliderChange() {
+      const z111 = parseFloat(document.getElementById('st_slider_111').value);
+      const z058 = parseFloat(document.getElementById('st_slider_058').value);
+      const z178 = parseFloat(document.getElementById('st_slider_178').value);
+
+      document.getElementById('st_val_111').innerText = `${z111 >= 0 ? '+' : ''}${z111.toFixed(1)}σ`;
+      document.getElementById('st_val_058').innerText = `${z058 >= 0 ? '+' : ''}${z058.toFixed(1)}σ`;
+      document.getElementById('st_val_178').innerText = `${z178 >= 0 ? '+' : ''}${z178.toFixed(1)}σ`;
+
+      const logit = -1.2 + (z111 * 0.95) + (z058 * 0.65) - (z178 * 0.85);
+      const prob = 1 / (1 + Math.exp(-logit));
+      updateStationGauge(prob);
+    }
+
+    function updateStationGauge(prob) {
+      const probPct = (prob * 100).toFixed(1);
+      document.getElementById('st_gaugeText').innerText = probPct + "%";
+
+      const arc = document.getElementById('st_gaugeArc');
+      const offset = 125.6 * (1 - prob);
+      arc.style.strokeDashoffset = offset;
+
+      const badge = document.getElementById('st_verdictBadge');
+      const actionText = document.getElementById('st_actionText');
+
+      if (prob >= 0.50) {
+        arc.style.stroke = '#ef4444';
+        badge.innerText = 'CRITICAL DEFECT DETECTED';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30 pulse-alert';
+        actionText.innerHTML = '<span class="text-red-400 font-bold">REJECT WAFER IMMEDIATELY</span>. Halt wafer lot & audit plasma etch chamber RF parameters.';
+      } else if (prob >= 0.35) {
+        arc.style.stroke = '#f59e0b';
+        badge.innerText = 'MODERATE DEFECT RISK';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30';
+        actionText.innerHTML = '<span class="text-amber-400 font-bold">SECONDARY INSPECTION REQUIRED</span>. Route unit to automated optical/electrical retest station ($150).';
+      } else {
+        arc.style.stroke = '#10b981';
+        badge.innerText = 'PASSED QUALITY INSPECTION';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        actionText.innerHTML = '<span class="text-emerald-400 font-bold">PASS INSPECTION</span>. Wafer telemetry nominal. Authorize for automated dicing & packaging.';
+      }
+    }
+
+    function pickStationRandom() {
+      const rand = UI_DATA.products[Math.floor(Math.random() * UI_DATA.products.length)];
+      onStationProductSelect(rand.id);
+    }
+
+    function pickStationDefect() {
+      const def = UI_DATA.products.find(p => p.true_label === 1 && p.prob > 0.65) || UI_DATA.products[1];
+      onStationProductSelect(def.id);
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 6: LIFECYCLE FUNCTIONS
+    // -------------------------------------------------------------
+    const LC_STEPS = [
+      { num: 1, title: "Business Understanding", desc: "Define cost matrix & minimize False Negatives ($5,000 escape)." },
+      { num: 2, title: "Data Collection", desc: "Ingest 200 products × 200 columns from UCI SECOM repository." },
+      { num: 3, title: "Data Preparation", desc: "Structure schema: 140 Normal (70%), 60 Defect (30%)." },
+      { num: 4, title: "Data Cleaning", desc: "0 missing values, prune zero-variance channels, audit 432 outlier cells." },
+      { num: 5, title: "Exploratory Data Analysis", desc: "Sensor correlation discovery (sensor_111: +0.352, sensor_178: -0.272)." },
+      { num: 6, title: "Feature Engineering", desc: "StandardScaler + ANOVA SelectKBest (retaining 35 high-signal channels)." },
+      { num: 7, title: "Model Building", desc: "Train SVM (RBF), Logistic Regression, Random Forest, and XGBoost." },
+      { num: 8, title: "Model Evaluation", desc: "Champion Selection: SVM achieved 75% accuracy and 50% defect recall." },
+      { num: 9, title: "Testing & Tuning", desc: "Holdout test on 40 unseen products; tune decision threshold to 0.35." },
+      { num: 10, title: "Deployment & Monitoring", desc: "Export pipeline bundle (.joblib) with <2ms latency & KS drift alerts." }
+    ];
+
+    function renderLifecycle() {
+      const grid = document.getElementById('mainLifecycleGrid');
+      grid.innerHTML = LC_STEPS.map(s => `
+        <div onclick="selectLcStep(${s.num})" id="lcCard_${s.num}" class="cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-3 hover:border-blue-500 transition flex flex-col justify-between min-h-[85px]">
+          <div class="flex items-center justify-between">
+            <span class="w-6 h-6 rounded bg-slate-800 text-blue-400 font-extrabold text-xs flex items-center justify-center">${s.num}</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white mt-1.5">${s.title}</div>
+            <div class="text-[10px] text-slate-400 truncate">${s.desc}</div>
+          </div>
+        </div>
+      `).join('');
+      selectLcStep(1);
+    }
+
+    function selectLcStep(num) {
+      document.querySelectorAll('[id^="lcCard_"]').forEach(c => c.classList.remove('border-blue-500', 'bg-blue-950/20'));
+      const active = document.getElementById(`lcCard_${num}`);
+      if (active) active.classList.add('border-blue-500', 'bg-blue-950/20');
+
+      const s = LC_STEPS.find(x => x.num === num);
+      document.getElementById('mainLifecycleDetail').innerHTML = `
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center gap-2 pb-2 border-b border-slate-800">
+            <span class="w-6 h-6 rounded bg-blue-600 text-white font-bold text-xs flex items-center justify-center">${s.num}</span>
+            <span class="text-sm font-bold text-white">${s.title}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold ml-auto">Phase Complete</span>
+          </div>
+          <p class="text-slate-300 pt-1">${s.desc}</p>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

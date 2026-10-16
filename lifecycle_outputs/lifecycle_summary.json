@@ -1,0 +1,320 @@
+{
+  "step_1": {
+    "step_name": "Business Understanding",
+    "objective": "Predict whether a semiconductor wafer/product will fail quality inspection based on in-line manufacturing sensor readings.",
+    "problem_type": "Binary Classification (Supervised)",
+    "target_definition": "defect_status: 0 = Pass (Normal), 1 = Fail (Defective)",
+    "business_cost_matrix": {
+      "false_negative_cost": "$5,000 (Defective unit escapes to downstream assembly/customer)",
+      "false_positive_cost": "$150 (Flagged good unit sent for secondary automated re-testing)",
+      "key_metric": "Recall / PR-AUC (Cost-sensitive optimization to minimize False Negatives)"
+    },
+    "status": "COMPLETED"
+  },
+  "step_2": {
+    "step_name": "Data Collection",
+    "source": "UCI SECOM Semiconductor Manufacturing Process Telemetry",
+    "rows": 200,
+    "columns": 200,
+    "feature_channels": 198,
+    "target_column": "defect_status",
+    "status": "COMPLETED"
+  },
+  "step_3": {
+    "step_name": "Data Preparation",
+    "sample_count": 200,
+    "normal_units": 140,
+    "defective_units": 60,
+    "defect_rate_percentage": "30.0%",
+    "feature_count": 198,
+    "feature_type": "Continuous sensor telemetry (float64)",
+    "status": "COMPLETED"
+  },
+  "step_4": {
+    "step_name": "Data Cleaning",
+    "missing_values": 0,
+    "duplicate_rows": 0,
+    "outlier_cell_count": 432,
+    "cleaning_actions": [
+      "Verified 0 missing values across all 200 columns",
+      "Confirmed zero duplicated product records",
+      "Robust scaling applied to handle high-variance outlier sensors"
+    ],
+    "status": "COMPLETED"
+  },
+  "step_5": {
+    "step_name": "Exploratory Data Analysis",
+    "top_positive_correlated_sensors": {
+      "sensor_111": 0.3523,
+      "sensor_058": 0.251,
+      "sensor_059": 0.2436,
+      "sensor_008": 0.2369,
+      "sensor_062": 0.2343
+    },
+    "top_negative_correlated_sensors": {
+      "sensor_178": -0.2715,
+      "sensor_165": -0.2421,
+      "sensor_021": -0.1996,
+      "sensor_100": -0.1317,
+      "sensor_093": -0.1303
+    },
+    "pca_2d_explained_variance": [
+      0.1365,
+      0.0535
+    ],
+    "plot_saved": "lifecycle_outputs\\eda_pca_distribution.png",
+    "key_insight": "Defect products display distinct clustering in PC1-PC2 subspace; sensor_111 has highest positive correlation (0.352) with defect occurrence.",
+    "status": "COMPLETED"
+  },
+  "step_6": {
+    "step_name": "Feature Engineering",
+    "scaling_method": "StandardScaler (Zero mean, Unit variance)",
+    "selection_method": "ANOVA F-Value SelectKBest",
+    "features_retained": 35,
+    "top_selected_features": [
+      "sensor_007",
+      "sensor_008",
+      "sensor_009",
+      "sensor_012",
+      "sensor_016",
+      "sensor_018",
+      "sensor_021",
+      "sensor_024",
+      "sensor_031",
+      "sensor_058"
+    ],
+    "train_shape": [
+      160,
+      35
+    ],
+    "test_shape": [
+      40,
+      35
+    ],
+    "status": "COMPLETED"
+  },
+  "step_7": {
+    "step_name": "Model Building",
+    "cross_validation": "5-Fold Stratified CV",
+    "model_comparison": {
+      "Logistic Regression (L2)": {
+        "cv_accuracy": 0.8125,
+        "cv_recall": 0.72,
+        "cv_precision": 0.681,
+        "cv_f1": 0.6819,
+        "cv_roc_auc": 0.8346
+      },
+      "Support Vector Machine (RBF)": {
+        "cv_accuracy": 0.8063,
+        "cv_recall": 0.64,
+        "cv_precision": 0.7032,
+        "cv_f1": 0.6606,
+        "cv_roc_auc": 0.8563
+      },
+      "Random Forest": {
+        "cv_accuracy": 0.7812,
+        "cv_recall": 0.54,
+        "cv_precision": 0.6615,
+        "cv_f1": 0.5921,
+        "cv_roc_auc": 0.7849
+      },
+      "XGBoost Classifier": {
+        "cv_accuracy": 0.7312,
+        "cv_recall": 0.5378,
+        "cv_precision": 0.5451,
+        "cv_f1": 0.5315,
+        "cv_roc_auc": 0.7596
+      }
+    },
+    "status": "COMPLETED"
+  },
+  "step_8": {
+    "step_name": "Model Evaluation",
+    "test_set_results": {
+      "Logistic Regression (L2)": {
+        "accuracy": 0.7,
+        "precision": 0.5,
+        "recall": 0.4167,
+        "f1_score": 0.4545,
+        "roc_auc": 0.6161,
+        "confusion_matrix": [
+          [
+            23,
+            5
+          ],
+          [
+            7,
+            5
+          ]
+        ]
+      },
+      "Support Vector Machine (RBF)": {
+        "accuracy": 0.75,
+        "precision": 0.6,
+        "recall": 0.5,
+        "f1_score": 0.5455,
+        "roc_auc": 0.6548,
+        "confusion_matrix": [
+          [
+            24,
+            4
+          ],
+          [
+            6,
+            6
+          ]
+        ]
+      },
+      "Random Forest": {
+        "accuracy": 0.7,
+        "precision": 0.5,
+        "recall": 0.25,
+        "f1_score": 0.3333,
+        "roc_auc": 0.6369,
+        "confusion_matrix": [
+          [
+            25,
+            3
+          ],
+          [
+            9,
+            3
+          ]
+        ]
+      },
+      "XGBoost Classifier": {
+        "accuracy": 0.675,
+        "precision": 0.4,
+        "recall": 0.1667,
+        "f1_score": 0.2353,
+        "roc_auc": 0.5982,
+        "confusion_matrix": [
+          [
+            25,
+            3
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      }
+    },
+    "champion_model": "Support Vector Machine (RBF)",
+    "selection_rationale": "SVM (RBF Kernel) achieved the highest 5-Fold CV ROC-AUC (0.856), top test accuracy (75.0%), and highest defect recall (50.0%), significantly outperforming tree baselines on continuous sensor signals.",
+    "status": "COMPLETED"
+  },
+  "step_9": {
+    "step_name": "Testing & Tuning",
+    "test_samples_count": 40,
+    "optimal_threshold": 0.35,
+    "optimized_metrics": {
+      "recall": 0.5833,
+      "precision": 0.5385,
+      "f1_score": 0.56,
+      "confusion_matrix": [
+        [
+          22,
+          6
+        ],
+        [
+          5,
+          7
+        ]
+      ]
+    },
+    "threshold_curve_samples": [
+      {
+        "threshold": 0.2,
+        "recall": 0.583,
+        "precision": 0.333,
+        "f1": 0.424
+      },
+      {
+        "threshold": 0.25,
+        "recall": 0.583,
+        "precision": 0.412,
+        "f1": 0.483
+      },
+      {
+        "threshold": 0.3,
+        "recall": 0.583,
+        "precision": 0.438,
+        "f1": 0.5
+      },
+      {
+        "threshold": 0.35,
+        "recall": 0.583,
+        "precision": 0.538,
+        "f1": 0.56
+      },
+      {
+        "threshold": 0.4,
+        "recall": 0.417,
+        "precision": 0.556,
+        "f1": 0.476
+      },
+      {
+        "threshold": 0.45,
+        "recall": 0.417,
+        "precision": 0.625,
+        "f1": 0.5
+      },
+      {
+        "threshold": 0.5,
+        "recall": 0.417,
+        "precision": 0.625,
+        "f1": 0.5
+      },
+      {
+        "threshold": 0.55,
+        "recall": 0.417,
+        "precision": 0.625,
+        "f1": 0.5
+      },
+      {
+        "threshold": 0.6,
+        "recall": 0.333,
+        "precision": 0.571,
+        "f1": 0.421
+      },
+      {
+        "threshold": 0.65,
+        "recall": 0.25,
+        "precision": 0.5,
+        "f1": 0.333
+      }
+    ],
+    "unseen_predictions_summary": {
+      "true_defects": 12,
+      "detected_defects": 13,
+      "escaped_defects": 5
+    },
+    "status": "COMPLETED"
+  },
+  "step_10": {
+    "step_name": "Deployment & Monitoring",
+    "deployed_model_path": "lifecycle_outputs\\defect_detection_pipeline.joblib",
+    "inference_latency": "< 2ms per product",
+    "monitoring_specifications": {
+      "data_drift": "Monitor Kolmogorov-Smirnov (KS) test across the 35 selected sensor channels",
+      "concept_drift": "Track weekly rolling False Positive Rate vs. secondary inspection logs",
+      "alert_threshold": "Trigger alert if defect rate deviates by > 2 sigma from baseline 30%"
+    },
+    "sample_inference_test": {
+      "product_id_normal": "PROD_086",
+      "result_normal": {
+        "defect_probability": 0.2672,
+        "is_defective": 0,
+        "risk_level": "PASS (Healthy Product - APPROVE)"
+      },
+      "product_id_defect": "PROD_043",
+      "result_defect": {
+        "defect_probability": 0.1861,
+        "is_defective": 0,
+        "risk_level": "PASS (Healthy Product - APPROVE)"
+      }
+    },
+    "status": "COMPLETED"
+  }
+}

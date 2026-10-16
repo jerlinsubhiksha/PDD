@@ -1,0 +1,6369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DefectIQ — Product Defect & Data Visual Analytics Studio</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --card-border: #1f293d;
+      --accent: #3b82f6;
+    }
+    body {
+      background-color: var(--bg);
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .view-btn.active {
+      background-color: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+    }
+    .subtab-btn.active {
+      border-color: #3b82f6;
+      color: #60a5fa;
+      background-color: rgba(59, 130, 246, 0.12);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #27354f;
+      border-radius: 4px;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .pulse-alert {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased flex flex-col bg-slate-950 text-slate-100">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      
+      <!-- Brand & Mission -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">DefectIQ Analytics Studio</h1>
+            <span class="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">Visual ML Dashboard</span>
+          </div>
+          <p class="text-xs text-slate-400">Confusion Matrix • Bar Graphs • Statistical Graphs • 200×200 Data Table</p>
+        </div>
+      </div>
+
+      <!-- Live KPI Badges -->
+      <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1 md:pb-0 text-xs">
+        <div class="bg-slate-800 border border-slate-700/80 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-slate-400">Total Products:</span>
+          <span class="font-bold text-white ml-1">200</span>
+        </div>
+        <div class="bg-red-950/40 border border-red-800/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-red-300">Defects:</span>
+          <span class="font-bold text-red-400 ml-1">60 (30.0%)</span>
+        </div>
+        <div class="bg-emerald-950/40 border border-emerald-800/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-emerald-300">Normals:</span>
+          <span class="font-bold text-emerald-400 ml-1">140 (70.0%)</span>
+        </div>
+        <div class="bg-blue-950/40 border border-blue-800/60 rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <span class="text-blue-300">ROC-AUC:</span>
+          <span class="font-bold text-blue-400 ml-1">0.856 (CV)</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAIN NAVIGATION BAR (Visual Components) -->
+    <div class="max-w-7xl mx-auto mt-3 pt-2 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto custom-scroll text-xs font-semibold">
+      <button onclick="switchView('confusion')" id="view-btn-confusion" class="view-btn active px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🔲</span> 1. Confusion Matrix
+      </button>
+      <button onclick="switchView('bargraph')" id="view-btn-bargraph" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>📊</span> 2. Bar Graphs
+      </button>
+      <button onclick="switchView('graphs')" id="view-btn-graphs" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>📈</span> 3. Graphs (ROC, Boxplot, PCA)
+      </button>
+      <button onclick="switchView('table')" id="view-btn-table" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>📋</span> 4. Interactive Data Table
+      </button>
+      <button onclick="switchView('station')" id="view-btn-station" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🔬</span> 5. Live Inspection Station
+      </button>
+      <button onclick="switchView('lifecycle')" id="view-btn-lifecycle" class="view-btn px-3.5 py-2 rounded-lg border border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <span>🔄</span> 6. Lifecycle Stepper (10 Steps)
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- ============================================================== -->
+    <!-- SECTION 1: CONFUSION MATRIX VISUALIZER                         -->
+    <!-- ============================================================== -->
+    <section id="section-confusion" class="space-y-6">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        
+        <!-- Header & Model Switcher -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>
+              <h2 class="text-lg font-bold text-white">Visual Confusion Matrix Studio</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Evaluate true positives, false alarms, and escaped defects with interactive threshold tuning</p>
+          </div>
+
+          <!-- Model Switcher Buttons -->
+          <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold overflow-x-auto">
+            <button onclick="selectModelCM(0)" id="cm-model-0" class="subtab-btn active px-3 py-1.5 rounded-lg border border-transparent transition whitespace-nowrap">
+              🏆 SVM (Champion)
+            </button>
+            <button onclick="selectModelCM(1)" id="cm-model-1" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition whitespace-nowrap">
+              Logistic Reg
+            </button>
+            <button onclick="selectModelCM(2)" id="cm-model-2" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition whitespace-nowrap">
+              Random Forest
+            </button>
+            <button onclick="selectModelCM(3)" id="cm-model-3" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition whitespace-nowrap">
+              XGBoost
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive Threshold Slider -->
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60 space-y-2">
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-semibold text-slate-300">Decision Threshold Tuning:</span>
+            <span id="cmThresholdVal" class="text-base font-mono font-bold text-blue-400">0.35</span>
+          </div>
+          <input type="range" id="cmSlider" min="0.05" max="0.95" step="0.05" value="0.35" oninput="onCmThresholdSlide(this.value)" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+          <div class="flex justify-between text-[11px] text-slate-500 font-mono">
+            <span>0.05 (Aggressive Defect Guard)</span>
+            <span class="text-blue-400 font-semibold">0.35 (Optimal Operating Point)</span>
+            <span>0.95 (Conservative Approval)</span>
+          </div>
+        </div>
+
+        <!-- 2x2 Heatmap Confusion Matrix Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          
+          <!-- Heatmap Matrix Grid (7 Cols) -->
+          <div class="lg:col-span-7 space-y-2">
+            <div class="text-center font-bold text-xs uppercase tracking-wider text-slate-400 pb-1">
+              Predicted Quality Status
+            </div>
+
+            <div class="flex items-center gap-3">
+              <!-- Left Vertical Label: Actual Status -->
+              <div class="writing-mode-vertical text-center font-bold text-xs uppercase tracking-wider text-slate-400 py-6" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                Actual Defect Status
+              </div>
+
+              <!-- Matrix 2x2 Cells -->
+              <div class="flex-1 grid grid-cols-2 gap-3">
+                
+                <!-- True Negative (Pass -> Pass) -->
+                <div class="bg-gradient-to-br from-emerald-950/40 to-slate-900 border-2 border-emerald-600/60 rounded-xl p-5 text-center transition hover:border-emerald-400 shadow-lg">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-emerald-400 uppercase">
+                    <span>True Negative (TN)</span>
+                    <span class="text-emerald-500">Normal ✓</span>
+                  </div>
+                  <div class="text-4xl font-black text-emerald-400 my-2" id="val_cm_tn">--</div>
+                  <div class="text-xs text-slate-300 font-semibold">Healthy Wafers Approved</div>
+                  <div class="text-[10px] text-slate-400 mt-1">$0 Scrap Loss • Cleared for Packaging</div>
+                </div>
+
+                <!-- False Positive (Pass -> Defect) -->
+                <div class="bg-gradient-to-br from-amber-950/40 to-slate-900 border-2 border-amber-600/60 rounded-xl p-5 text-center transition hover:border-amber-400 shadow-lg">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-amber-400 uppercase">
+                    <span>False Positive (FP)</span>
+                    <span class="text-amber-500">False Alarm ⚠</span>
+                  </div>
+                  <div class="text-4xl font-black text-amber-400 my-2" id="val_cm_fp">--</div>
+                  <div class="text-xs text-slate-300 font-semibold">Healthy Flagged for Retest</div>
+                  <div class="text-[10px] text-slate-400 mt-1">Cost: ~$150 per secondary re-test</div>
+                </div>
+
+                <!-- False Negative (Defect -> Pass) -->
+                <div class="bg-gradient-to-br from-red-950/40 to-slate-900 border-2 border-red-600/60 rounded-xl p-5 text-center transition hover:border-red-400 shadow-lg">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-red-400 uppercase">
+                    <span>False Negative (FN)</span>
+                    <span class="text-red-500">Escape Defect ❌</span>
+                  </div>
+                  <div class="text-4xl font-black text-red-400 my-2" id="val_cm_fn">--</div>
+                  <div class="text-xs text-slate-300 font-semibold">Defective Wafers Missed</div>
+                  <div class="text-[10px] text-red-300 mt-1 font-semibold">Severe Impact: $5,000 / escape failure</div>
+                </div>
+
+                <!-- True Positive (Defect -> Defect) -->
+                <div class="bg-gradient-to-br from-blue-950/40 to-slate-900 border-2 border-blue-600/60 rounded-xl p-5 text-center transition hover:border-blue-400 shadow-lg">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-blue-400 uppercase">
+                    <span>True Positive (TP)</span>
+                    <span class="text-blue-500">Caught Defect 🎯</span>
+                  </div>
+                  <div class="text-4xl font-black text-blue-400 my-2" id="val_cm_tp">--</div>
+                  <div class="text-xs text-slate-300 font-semibold">Defective Wafers Intercepted</div>
+                  <div class="text-[10px] text-blue-300 mt-1 font-semibold">Rejected early • Prevents Field Failures</div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Axis Footers -->
+            <div class="grid grid-cols-2 text-center text-xs text-slate-400 pt-1 font-mono">
+              <div>Predicted Normal (0)</div>
+              <div>Predicted Defect (1)</div>
+            </div>
+          </div>
+
+          <!-- Right 5 Cols: Financial & Metric Dials -->
+          <div class="lg:col-span-5 bg-slate-800/40 border border-slate-700/70 rounded-xl p-5 space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Statistical Performance Metrics</h3>
+            
+            <div class="space-y-3 text-xs">
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Defect Recall (Sensitivity):</span>
+                  <span id="cm_recall_text" class="font-bold text-blue-400 font-mono">--%</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="cm_recall_bar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Percentage of all actual defects captured</div>
+              </div>
+
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Defect Precision:</span>
+                  <span id="cm_precision_text" class="font-bold text-indigo-400 font-mono">--%</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="cm_precision_bar" class="bg-indigo-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Reliability of flagged defect alarms</div>
+              </div>
+
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="text-slate-300">Overall Accuracy:</span>
+                  <span id="cm_accuracy_text" class="font-bold text-emerald-400 font-mono">--%</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div id="cm_accuracy_bar" class="bg-emerald-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Cost Impact Calculation -->
+            <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 space-y-2 text-xs">
+              <div class="font-bold text-white flex justify-between">
+                <span>Cost Asymmetry Analysis:</span>
+                <span id="cm_cost_saved" class="text-emerald-400 font-bold">$0 Saved</span>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed" id="cm_cost_desc">
+                Catching defects early avoids downstream assembly losses while keeping secondary re-test expenses bounded.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 2: BAR GRAPHS STUDIO                                   -->
+    <!-- ============================================================== -->
+    <section id="section-bargraph" class="hidden space-y-6">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span>
+              <h2 class="text-lg font-bold text-white">Visual Bar Graph Analytics</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Explore feature correlations, mean telemetry discrepancies, and benchmark comparisons</p>
+          </div>
+
+          <!-- Bar Graph Mode Tabs -->
+          <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold">
+            <button onclick="switchBarView('correlation')" id="bar-tab-correlation" class="subtab-btn active px-3 py-1.5 rounded-lg border border-transparent transition">
+              1. Sensor Correlations
+            </button>
+            <button onclick="switchBarView('means')" id="bar-tab-means" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition">
+              2. Defect vs Normal Means
+            </button>
+            <button onclick="switchBarView('models')" id="bar-tab-models" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition">
+              3. Model Comparisons
+            </button>
+          </div>
+        </div>
+
+        <!-- BAR GRAPH CONTAINER 1: CORRELATIONS -->
+        <div id="bar-container-correlation" class="space-y-4">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-semibold">Top Sensor Pearson Correlations with Defect Status ($r \in [-1, 1]$):</span>
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1 text-red-400"><span class="w-2.5 h-2.5 bg-red-500 rounded"></span> Defect Driver (+)</span>
+              <span class="flex items-center gap-1 text-emerald-400"><span class="w-2.5 h-2.5 bg-emerald-500 rounded"></span> Process Stabilizer (-)</span>
+            </div>
+          </div>
+
+          <div class="space-y-3 bg-slate-950 p-5 rounded-xl border border-slate-800 text-xs" id="barCorrList">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- BAR GRAPH CONTAINER 2: DEFECT VS NORMAL MEANS -->
+        <div id="bar-container-means" class="hidden space-y-4">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-semibold">Mean Sensor Reading: Defective Products vs Normal Products</span>
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1 text-red-400"><span class="w-2.5 h-2.5 bg-red-500 rounded"></span> Defective Mean</span>
+              <span class="flex items-center gap-1 text-blue-400"><span class="w-2.5 h-2.5 bg-blue-500 rounded"></span> Normal Mean</span>
+            </div>
+          </div>
+
+          <div class="space-y-4 bg-slate-950 p-5 rounded-xl border border-slate-800 text-xs" id="barMeansList">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- BAR GRAPH CONTAINER 3: MODEL COMPARISONS -->
+        <div id="bar-container-models" class="hidden space-y-4">
+          <div class="text-xs text-slate-300 font-semibold">Multi-Algorithm Benchmark Performance Metrics Across Models</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="barModelsGrid">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 3: ADVANCED GRAPHS ("BRAPH")                           -->
+    <!-- ============================================================== -->
+    <section id="section-graphs" class="hidden space-y-6">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+              <h2 class="text-lg font-bold text-white">Advanced Graphs & Curve Visualizations</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">ROC Curve, Sensor Distribution Box Plots (Whiskers), and 2D Latent Feature Projections</p>
+          </div>
+
+          <!-- Graph Selector Tabs -->
+          <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold">
+            <button onclick="switchGraphSubtab('roc')" id="graph-tab-roc" class="subtab-btn active px-3 py-1.5 rounded-lg border border-transparent transition">
+              📈 ROC Curve
+            </button>
+            <button onclick="switchGraphSubtab('boxplot')" id="graph-tab-boxplot" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition">
+              📦 Sensor Boxplots
+            </button>
+            <button onclick="switchGraphSubtab('pca')" id="graph-tab-pca" class="subtab-btn px-3 py-1.5 rounded-lg border border-transparent transition">
+              🌌 PCA Latent Manifold
+            </button>
+          </div>
+        </div>
+
+        <!-- GRAPH 1: ROC CURVE (SVG GRAPH) -->
+        <div id="graph-container-roc" class="space-y-4">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            
+            <div class="lg:col-span-7 bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col items-center">
+              <div class="w-full flex justify-between text-xs text-slate-400 mb-2">
+                <span class="font-bold text-white">Receiver Operating Characteristic (ROC)</span>
+                <span class="font-mono text-emerald-400 font-bold">AUC = 0.8563</span>
+              </div>
+
+              <!-- SVG ROC Curve Diagram -->
+              <div class="w-full max-w-md aspect-square relative">
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                  <!-- Grid -->
+                  <line x1="10" y1="90" x2="90" y2="90" stroke="#1f293d" stroke-width="0.8"/>
+                  <line x1="10" y1="50" x2="90" y2="50" stroke="#1f293d" stroke-width="0.5" stroke-dasharray="2"/>
+                  <line x1="10" y1="10" x2="90" y2="10" stroke="#1f293d" stroke-width="0.8"/>
+                  <line x1="10" y1="90" x2="10" y2="10" stroke="#1f293d" stroke-width="0.8"/>
+                  <line x1="50" y1="90" x2="50" y2="10" stroke="#1f293d" stroke-width="0.5" stroke-dasharray="2"/>
+                  <line x1="90" y1="90" x2="90" y2="10" stroke="#1f293d" stroke-width="0.8"/>
+
+                  <!-- Diagonal Random Chance Baseline -->
+                  <line x1="10" y1="90" x2="90" y2="10" stroke="#475569" stroke-width="0.8" stroke-dasharray="2"/>
+
+                  <!-- Shaded Area Under Curve -->
+                  <polygon id="rocArea" points="10,90 10,90 90,90" fill="rgba(59, 130, 246, 0.15)"/>
+
+                  <!-- ROC Curve Path -->
+                  <path id="rocPath" d="M 10 90 L 90 10" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+
+                  <!-- Current Operating Threshold Point Marker -->
+                  <circle id="rocOperatingMarker" cx="35" cy="30" r="3" fill="#10b981" stroke="#ffffff" stroke-width="1"/>
+                </svg>
+                <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-1 px-2">
+                  <span>FPR: 0.0</span>
+                  <span>False Positive Rate (1 - Specificity)</span>
+                  <span>FPR: 1.0</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5 space-y-4 text-xs">
+              <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80 space-y-2">
+                <h4 class="font-bold text-white uppercase tracking-wider text-[11px]">ROC Curve Interpretation</h4>
+                <p class="text-slate-300 leading-relaxed">
+                  The ROC curve depicts the true positive rate (defects caught) versus false alarm rate across all potential thresholds.
+                </p>
+                <div class="pt-2 border-t border-slate-700 space-y-1 font-mono text-[11px]">
+                  <div class="flex justify-between"><span class="text-slate-400">Baseline (Random):</span><span class="text-slate-400">AUC = 0.500</span></div>
+                  <div class="flex justify-between"><span class="text-emerald-400 font-bold">SVM (Champion):</span><span class="text-emerald-400 font-bold">AUC = 0.8563</span></div>
+                  <div class="flex justify-between"><span class="text-indigo-400">Logistic Regression:</span><span class="text-indigo-400">AUC = 0.8346</span></div>
+                  <div class="flex justify-between"><span class="text-slate-400">Random Forest:</span><span class="text-slate-400">AUC = 0.7849</span></div>
+                </div>
+              </div>
+
+              <div class="bg-blue-950/30 p-4 rounded-xl border border-blue-800/40 text-blue-200">
+                <span class="font-bold">Green Marker:</span> Current operating point at threshold <strong>0.35</strong>, which maximizes the True Positive Rate while keeping False Alarms controlled.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- GRAPH 2: SENSOR BOX PLOTS (RANGE & WHISKER GRAPHS) -->
+        <div id="graph-container-boxplot" class="hidden space-y-4">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-semibold">Interquartile Range (IQR) & Min-Max Distribution: Normal vs Defective</span>
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1.5 text-blue-400"><span class="w-3 h-3 rounded bg-blue-600 inline-block"></span> Normal (Pass)</span>
+              <span class="flex items-center gap-1.5 text-red-400"><span class="w-3 h-3 rounded bg-red-600 inline-block"></span> Defective (Fail)</span>
+            </div>
+          </div>
+
+          <div class="space-y-4" id="boxplotsContainer">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- GRAPH 3: PCA 2D SCATTER GRAPH -->
+        <div id="graph-container-pca" class="hidden space-y-4">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col items-center">
+            <div class="w-full flex justify-between text-xs text-slate-400 mb-2">
+              <span class="font-bold text-white">PCA 2D Latent Feature Manifold (200 Products)</span>
+              <span>PC1: 13.7% Var • PC2: 5.4% Var</span>
+            </div>
+            <div class="relative w-full flex items-center justify-center">
+              <canvas id="pcaCanvasSub" width="600" height="340" class="w-full cursor-crosshair"></canvas>
+              <div id="pcaTooltipSub" class="absolute hidden bg-slate-900 border border-slate-700 text-white text-xs p-2.5 rounded-lg shadow-xl pointer-events-none"></div>
+            </div>
+            <div class="flex justify-between w-full text-xs text-slate-500 pt-2 font-mono">
+              <span>PC1 Axis (Global Sensor Variance)</span>
+              <div class="flex items-center gap-3">
+                <span class="text-blue-400">● 140 Normal Wafers</span>
+                <span class="text-red-400 font-bold">● 60 Defective Wafers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 4: INTERACTIVE DATA TABLE                              -->
+    <!-- ============================================================== -->
+    <section id="section-table" class="hidden space-y-5">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span>
+              <h2 class="text-lg font-bold text-white">Product Defect Data Table (200 Units)</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Explore each wafer's ground truth, predicted risk, and key sensor readings</p>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="mainSearchInput" placeholder="Search by Product ID..." oninput="onMainTableFilter()" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="mainFilterSelect" onchange="onMainTableFilter()" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-xs outline-none">
+              <option value="all">All Units (200)</option>
+              <option value="defects">Defective Only (60)</option>
+              <option value="normals">Normal Only (140)</option>
+              <option value="tp">True Positives (Caught Defects)</option>
+              <option value="fn">False Negatives (Escaped Defects)</option>
+              <option value="fp">False Positives (False Alarms)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table Viewport -->
+        <div class="overflow-x-auto custom-scroll border border-slate-800 rounded-xl max-h-[500px]">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-800/90 sticky top-0 z-10 text-slate-300 font-semibold border-b border-slate-700">
+              <tr>
+                <th onclick="sortTable('id')" class="p-3 cursor-pointer hover:text-white whitespace-nowrap">Product ID ⬍</th>
+                <th onclick="sortTable('true_label')" class="p-3 cursor-pointer hover:text-white whitespace-nowrap">Actual Status ⬍</th>
+                <th onclick="sortTable('pred_label')" class="p-3 cursor-pointer hover:text-white whitespace-nowrap">Verdict ⬍</th>
+                <th onclick="sortTable('prob')" class="p-3 cursor-pointer hover:text-white whitespace-nowrap">Defect Risk % ⬍</th>
+                <th class="p-3 font-mono text-blue-400 whitespace-nowrap">sensor_111</th>
+                <th class="p-3 font-mono text-indigo-400 whitespace-nowrap">sensor_058</th>
+                <th class="p-3 font-mono text-emerald-400 whitespace-nowrap">sensor_178</th>
+                <th class="p-3 font-mono text-purple-400 whitespace-nowrap">sensor_008</th>
+                <th class="p-3 whitespace-nowrap">Inspection</th>
+              </tr>
+            </thead>
+            <tbody id="mainTableBody" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination & Stats Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 pt-2 gap-3">
+          <div id="tableRecordCount">Showing 1-25 of 200 products</div>
+          <div class="flex items-center gap-2">
+            <button onclick="prevTablePage()" id="prevPageBtn" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50">Previous</button>
+            <span id="pageIndicator" class="px-2 font-mono">Page 1 / 8</span>
+            <button onclick="nextTablePage()" id="nextPageBtn" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50">Next</button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 5: LIVE INSPECTION STATION (INFERENCE)                 -->
+    <!-- ============================================================== -->
+    <section id="section-station" class="hidden space-y-6">
+      <!-- Station Content (Same robust station as before) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <h2 class="text-base font-bold text-white">Production Line Quality Inspection Station</h2>
+              <p class="text-xs text-slate-400">Select any manufactured unit or simulate live telemetry drift</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Pipeline Live (&lt;2ms)
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-slate-400 mb-1">Select Manufactured Unit (200 Total):</label>
+              <select id="stationProductSelect" onchange="onStationProductSelect(this.value)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              </select>
+            </div>
+            <div class="flex items-end gap-2">
+              <button onclick="pickStationRandom()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg py-2 text-xs font-semibold transition">
+                🎲 Random
+              </button>
+              <button onclick="pickStationDefect()" class="w-full bg-red-950/60 hover:bg-red-900/80 text-red-200 border border-red-800/80 rounded-lg py-2 text-xs font-semibold transition">
+                ⚠️ Defect Spike
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-4 pt-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Telemetry Adjustment Sliders</h3>
+            
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-blue-400">sensor_111</span>
+                  <span class="text-slate-400 ml-1.5">(Critical Inline Process Deviation)</span>
+                </div>
+                <span id="st_val_111" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="st_slider_111" min="-3" max="3" step="0.1" value="0" oninput="onStationSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-indigo-400">sensor_058</span>
+                  <span class="text-slate-400 ml-1.5">(Chamber RF Reflection Anomaly)</span>
+                </div>
+                <span id="st_val_058" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="st_slider_058" min="-3" max="3" step="0.1" value="0" oninput="onStationSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+              <div class="flex justify-between text-xs mb-1">
+                <div>
+                  <span class="font-bold text-emerald-400">sensor_178</span>
+                  <span class="text-slate-400 ml-1.5">(Thermal Stabilizer - Protective Signal)</span>
+                </div>
+                <span id="st_val_178" class="font-mono text-white font-bold">--</span>
+              </div>
+              <input type="range" id="st_slider_178" min="-3" max="3" step="0.1" value="0" oninput="onStationSliderChange()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 flex flex-col gap-5">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center shadow-xl space-y-4 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="text-xs uppercase font-bold tracking-wider text-slate-400 mb-1">Real-Time Inspection Verdict</div>
+              <div id="st_verdictBadge" class="inline-block px-4 py-1.5 rounded-full text-sm font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                PASSED QUALITY INSPECTION
+              </div>
+            </div>
+
+            <div class="relative w-48 h-28 mx-auto my-2">
+              <svg viewBox="0 0 100 55" class="w-full h-full">
+                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#1f293d" stroke-width="8" stroke-linecap="round"/>
+                <path id="st_gaugeArc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="125.6" stroke-dashoffset="125.6" stroke-linecap="round" class="transition-all duration-300"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-end pb-1">
+                <span id="st_gaugeText" class="text-3xl font-extrabold text-white">0.0%</span>
+                <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Defect Risk</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-3.5 text-left text-xs space-y-1">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Engineering Protocol:</div>
+              <div id="st_actionText" class="font-semibold text-slate-200">Wafer within statistical control limits. Authorize for automated dicing & packaging.</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-800 text-left">
+              <div>
+                <span class="text-slate-400">Ground Truth:</span>
+                <div id="st_groundTruth" class="font-bold text-white">Normal (0)</div>
+              </div>
+              <div>
+                <span class="text-slate-400">Cutoff:</span>
+                <div class="font-bold text-blue-400">0.35 (Recall Guard)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 6: LIFECYCLE STEPPER (10 STEPS)                        -->
+    <!-- ============================================================== -->
+    <section id="section-lifecycle" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <h2 class="text-base font-bold text-white">The Data Science Lifecycle: 10 Steps</h2>
+            <p class="text-xs text-slate-400">"It is a cycle, not a line. What we learn in later steps often sends us back to earlier ones."</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            10/10 Complete
+          </span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="mainLifecycleGrid"></div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5" id="mainLifecycleDetail"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- WAFER INSPECTION MODAL -->
+  <div id="waferModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+          <h3 class="text-base font-bold text-white" id="modalTitle">PROD_001 Quality Inspection</h3>
+        </div>
+        <button onclick="closeWaferModal()" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <div id="modalBody" class="space-y-3 text-xs">
+        <!-- Injected via JS -->
+      </div>
+      <div class="pt-3 border-t border-slate-800 flex justify-end">
+        <button onclick="closeWaferModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs">Close Inspection</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-slate-800/80 bg-slate-900/60 text-xs text-slate-500 py-4 px-6 text-center">
+    DefectIQ Studio • Visual Confusion Matrix • Bar Graphs • Statistical Curves • Data Table
+  </footer>
+
+  <script>
+    const UI_DATA = {
+  "dataset_meta": {
+    "total_rows": 200,
+    "total_cols": 200,
+    "feature_count": 198,
+    "defects_count": 60,
+    "normals_count": 140,
+    "optimal_threshold": 0.35,
+    "pca_variance": [
+      0.1104,
+      0.0618
+    ]
+  },
+  "key_sensors": [
+    "sensor_111",
+    "sensor_058",
+    "sensor_059",
+    "sensor_008",
+    "sensor_062",
+    "sensor_178",
+    "sensor_165",
+    "sensor_021",
+    "sensor_100",
+    "sensor_093"
+  ],
+  "sensor_stats": {
+    "sensor_111": {
+      "min": -10.6,
+      "max": 53.68,
+      "mean": 5.0,
+      "median": 2.11
+    },
+    "sensor_058": {
+      "min": 18.01,
+      "max": 400.0,
+      "mean": 62.55,
+      "median": 49.52
+    },
+    "sensor_059": {
+      "min": 1.37,
+      "max": 400.0,
+      "mean": 27.29,
+      "median": 17.47
+    },
+    "sensor_008": {
+      "min": -7150.25,
+      "max": -1368.75,
+      "mean": -5551.37,
+      "median": -5494.25
+    },
+    "sensor_062": {
+      "min": 0.62,
+      "max": 400.0,
+      "mean": 12.23,
+      "median": 2.82
+    },
+    "sensor_178": {
+      "min": 2.25,
+      "max": 15.95,
+      "mean": 8.8,
+      "median": 8.78
+    },
+    "sensor_165": {
+      "min": 59.98,
+      "max": 76.88,
+      "mean": 68.7,
+      "median": 68.38
+    },
+    "sensor_021": {
+      "min": 609.5,
+      "max": 3556.0,
+      "mean": 2676.03,
+      "median": 2648.88
+    },
+    "sensor_100": {
+      "min": 5.18,
+      "max": 96.96,
+      "mean": 18.19,
+      "median": 14.15
+    },
+    "sensor_093": {
+      "min": 11.34,
+      "max": 69.66,
+      "mean": 40.06,
+      "median": 39.92
+    }
+  },
+  "products": [
+    {
+      "id": "PROD_001",
+      "true_label": 0,
+      "prob": 0.155,
+      "pred_label": 0,
+      "pca_x": -0.02,
+      "pca_y": -0.619,
+      "sensors": {
+        "sensor_111": 27.3,
+        "sensor_058": 111.39,
+        "sensor_059": 23.17,
+        "sensor_008": -6448.0,
+        "sensor_062": 3.35,
+        "sensor_178": 12.38,
+        "sensor_165": 61.72,
+        "sensor_021": 3159.25,
+        "sensor_100": 23.72,
+        "sensor_093": 24.54
+      }
+    },
+    {
+      "id": "PROD_002",
+      "true_label": 1,
+      "prob": 0.6924,
+      "pred_label": 1,
+      "pca_x": -1.768,
+      "pca_y": 16.767,
+      "sensors": {
+        "sensor_111": 18.39,
+        "sensor_058": 60.12,
+        "sensor_059": 234.95,
+        "sensor_008": -2664.25,
+        "sensor_062": 205.09,
+        "sensor_178": 11.62,
+        "sensor_165": 62.5,
+        "sensor_021": 1542.0,
+        "sensor_100": 8.45,
+        "sensor_093": 27.28
+      }
+    },
+    {
+      "id": "PROD_003",
+      "true_label": 1,
+      "prob": 0.5825,
+      "pred_label": 1,
+      "pca_x": -1.279,
+      "pca_y": -2.348,
+      "sensors": {
+        "sensor_111": 0.85,
+        "sensor_058": 56.35,
+        "sensor_059": 10.95,
+        "sensor_008": -5475.5,
+        "sensor_062": 2.43,
+        "sensor_178": 6.86,
+        "sensor_165": 70.56,
+        "sensor_021": 2520.5,
+        "sensor_100": 14.31,
+        "sensor_093": 40.84
+      }
+    },
+    {
+      "id": "PROD_004",
+      "true_label": 0,
+      "prob": 0.1084,
+      "pred_label": 0,
+      "pca_x": 0.682,
+      "pca_y": -1.27,
+      "sensors": {
+        "sensor_111": 3.71,
+        "sensor_058": 44.96,
+        "sensor_059": 24.38,
+        "sensor_008": -5329.75,
+        "sensor_062": 3.42,
+        "sensor_178": 6.6,
+        "sensor_165": 73.69,
+        "sensor_021": 2494.0,
+        "sensor_100": 12.83,
+        "sensor_093": 57.94
+      }
+    },
+    {
+      "id": "PROD_005",
+      "true_label": 0,
+      "prob": 0.2359,
+      "pred_label": 0,
+      "pca_x": 0.551,
+      "pca_y": -0.175,
+      "sensors": {
+        "sensor_111": -2.1,
+        "sensor_058": 77.01,
+        "sensor_059": 18.37,
+        "sensor_008": -5224.5,
+        "sensor_062": 3.62,
+        "sensor_178": 9.92,
+        "sensor_165": 67.92,
+        "sensor_021": 2650.5,
+        "sensor_100": 17.18,
+        "sensor_093": 48.73
+      }
+    },
+    {
+      "id": "PROD_006",
+      "true_label": 0,
+      "prob": 0.0528,
+      "pred_label": 0,
+      "pca_x": 0.152,
+      "pca_y": -1.467,
+      "sensors": {
+        "sensor_111": 0.51,
+        "sensor_058": 88.25,
+        "sensor_059": 20.01,
+        "sensor_008": -5521.25,
+        "sensor_062": 2.62,
+        "sensor_178": 12.47,
+        "sensor_165": 69.9,
+        "sensor_021": 2683.5,
+        "sensor_100": 17.92,
+        "sensor_093": 34.28
+      }
+    },
+    {
+      "id": "PROD_007",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -1.539,
+      "pca_y": 1.825,
+      "sensors": {
+        "sensor_111": 7.03,
+        "sensor_058": 19.22,
+        "sensor_059": 23.25,
+        "sensor_008": -5491.75,
+        "sensor_062": 1.47,
+        "sensor_178": 9.94,
+        "sensor_165": 69.63,
+        "sensor_021": 2649.75,
+        "sensor_100": 16.45,
+        "sensor_093": 46.66
+      }
+    },
+    {
+      "id": "PROD_008",
+      "true_label": 0,
+      "prob": 0.3293,
+      "pred_label": 0,
+      "pca_x": -0.569,
+      "pca_y": -0.003,
+      "sensors": {
+        "sensor_111": 20.72,
+        "sensor_058": 63.38,
+        "sensor_059": 23.16,
+        "sensor_008": -6205.0,
+        "sensor_062": 5.01,
+        "sensor_178": 8.79,
+        "sensor_165": 65.0,
+        "sensor_021": 2984.0,
+        "sensor_100": 7.35,
+        "sensor_093": 43.17
+      }
+    },
+    {
+      "id": "PROD_009",
+      "true_label": 0,
+      "prob": 0.14,
+      "pred_label": 0,
+      "pca_x": -2.335,
+      "pca_y": -0.236,
+      "sensors": {
+        "sensor_111": -8.75,
+        "sensor_058": 30.48,
+        "sensor_059": 12.32,
+        "sensor_008": -5677.75,
+        "sensor_062": 2.65,
+        "sensor_178": 12.42,
+        "sensor_165": 66.69,
+        "sensor_021": 2791.75,
+        "sensor_100": 69.2,
+        "sensor_093": 25.76
+      }
+    },
+    {
+      "id": "PROD_010",
+      "true_label": 1,
+      "prob": 0.577,
+      "pred_label": 1,
+      "pca_x": -0.666,
+      "pca_y": -1.468,
+      "sensors": {
+        "sensor_111": 22.44,
+        "sensor_058": 48.84,
+        "sensor_059": 15.85,
+        "sensor_008": -5278.0,
+        "sensor_062": 2.03,
+        "sensor_178": 8.02,
+        "sensor_165": 68.32,
+        "sensor_021": 2624.25,
+        "sensor_100": 9.24,
+        "sensor_093": 36.45
+      }
+    },
+    {
+      "id": "PROD_011",
+      "true_label": 0,
+      "prob": 0.0371,
+      "pred_label": 0,
+      "pca_x": -0.948,
+      "pca_y": -0.071,
+      "sensors": {
+        "sensor_111": 2.32,
+        "sensor_058": 49.71,
+        "sensor_059": 11.32,
+        "sensor_008": -5228.25,
+        "sensor_062": 3.31,
+        "sensor_178": 9.98,
+        "sensor_165": 66.8,
+        "sensor_021": 2544.5,
+        "sensor_100": 12.65,
+        "sensor_093": 61.84
+      }
+    },
+    {
+      "id": "PROD_012",
+      "true_label": 0,
+      "prob": 0.304,
+      "pred_label": 0,
+      "pca_x": -0.814,
+      "pca_y": -1.12,
+      "sensors": {
+        "sensor_111": 5.8,
+        "sensor_058": 36.88,
+        "sensor_059": 6.73,
+        "sensor_008": -5452.75,
+        "sensor_062": 1.65,
+        "sensor_178": 13.55,
+        "sensor_165": 66.82,
+        "sensor_021": 2643.25,
+        "sensor_100": 24.31,
+        "sensor_093": 45.05
+      }
+    },
+    {
+      "id": "PROD_013",
+      "true_label": 0,
+      "prob": 0.0174,
+      "pred_label": 0,
+      "pca_x": 0.232,
+      "pca_y": -1.554,
+      "sensors": {
+        "sensor_111": -1.12,
+        "sensor_058": 45.9,
+        "sensor_059": 21.16,
+        "sensor_008": -6316.75,
+        "sensor_062": 1.86,
+        "sensor_178": 10.97,
+        "sensor_165": 69.61,
+        "sensor_021": 3114.5,
+        "sensor_100": 13.16,
+        "sensor_093": 43.94
+      }
+    },
+    {
+      "id": "PROD_014",
+      "true_label": 0,
+      "prob": 0.1544,
+      "pred_label": 0,
+      "pca_x": -1.186,
+      "pca_y": 0.717,
+      "sensors": {
+        "sensor_111": 16.46,
+        "sensor_058": 87.72,
+        "sensor_059": 21.48,
+        "sensor_008": -5667.5,
+        "sensor_062": 2.26,
+        "sensor_178": 11.44,
+        "sensor_165": 63.58,
+        "sensor_021": 2458.25,
+        "sensor_100": 21.23,
+        "sensor_093": 42.22
+      }
+    },
+    {
+      "id": "PROD_015",
+      "true_label": 0,
+      "prob": 0.0578,
+      "pred_label": 0,
+      "pca_x": -1.801,
+      "pca_y": -1.195,
+      "sensors": {
+        "sensor_111": 2.8,
+        "sensor_058": 37.43,
+        "sensor_059": 1.37,
+        "sensor_008": -6456.25,
+        "sensor_062": 5.37,
+        "sensor_178": 10.47,
+        "sensor_165": 69.59,
+        "sensor_021": 2330.75,
+        "sensor_100": 22.01,
+        "sensor_093": 48.22
+      }
+    },
+    {
+      "id": "PROD_016",
+      "true_label": 0,
+      "prob": 0.1167,
+      "pred_label": 0,
+      "pca_x": 0.845,
+      "pca_y": -0.447,
+      "sensors": {
+        "sensor_111": 5.79,
+        "sensor_058": 104.35,
+        "sensor_059": 10.81,
+        "sensor_008": -5435.5,
+        "sensor_062": 1.99,
+        "sensor_178": 11.68,
+        "sensor_165": 68.29,
+        "sensor_021": 2635.75,
+        "sensor_100": 18.57,
+        "sensor_093": 43.22
+      }
+    },
+    {
+      "id": "PROD_017",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": -2.842,
+      "pca_y": 21.353,
+      "sensors": {
+        "sensor_111": 17.64,
+        "sensor_058": 125.54,
+        "sensor_059": 400.0,
+        "sensor_008": -1431.5,
+        "sensor_062": 400.0,
+        "sensor_178": 9.76,
+        "sensor_165": 62.5,
+        "sensor_021": 619.5,
+        "sensor_100": 16.19,
+        "sensor_093": 44.06
+      }
+    },
+    {
+      "id": "PROD_018",
+      "true_label": 0,
+      "prob": 0.0399,
+      "pred_label": 0,
+      "pca_x": -0.837,
+      "pca_y": 0.007,
+      "sensors": {
+        "sensor_111": -0.63,
+        "sensor_058": 40.0,
+        "sensor_059": 24.31,
+        "sensor_008": -5475.0,
+        "sensor_062": 5.58,
+        "sensor_178": 14.67,
+        "sensor_165": 74.58,
+        "sensor_021": 2571.25,
+        "sensor_100": 18.12,
+        "sensor_093": 37.01
+      }
+    },
+    {
+      "id": "PROD_019",
+      "true_label": 0,
+      "prob": 0.3092,
+      "pred_label": 0,
+      "pca_x": -1.85,
+      "pca_y": -0.3,
+      "sensors": {
+        "sensor_111": -6.64,
+        "sensor_058": 22.42,
+        "sensor_059": 23.99,
+        "sensor_008": -5455.25,
+        "sensor_062": 3.04,
+        "sensor_178": 4.35,
+        "sensor_165": 71.52,
+        "sensor_021": 2776.25,
+        "sensor_100": 11.28,
+        "sensor_093": 47.08
+      }
+    },
+    {
+      "id": "PROD_020",
+      "true_label": 0,
+      "prob": 0.4096,
+      "pred_label": 1,
+      "pca_x": -1.324,
+      "pca_y": -0.688,
+      "sensors": {
+        "sensor_111": 6.19,
+        "sensor_058": 62.59,
+        "sensor_059": 11.13,
+        "sensor_008": -5472.0,
+        "sensor_062": 2.04,
+        "sensor_178": 3.68,
+        "sensor_165": 73.68,
+        "sensor_021": 2578.0,
+        "sensor_100": 17.66,
+        "sensor_093": 61.57
+      }
+    },
+    {
+      "id": "PROD_021",
+      "true_label": 0,
+      "prob": 0.2112,
+      "pred_label": 0,
+      "pca_x": -1.063,
+      "pca_y": -1.066,
+      "sensors": {
+        "sensor_111": -0.02,
+        "sensor_058": 27.11,
+        "sensor_059": 19.19,
+        "sensor_008": -5132.0,
+        "sensor_062": 1.67,
+        "sensor_178": 8.31,
+        "sensor_165": 69.38,
+        "sensor_021": 2616.0,
+        "sensor_100": 12.31,
+        "sensor_093": 36.22
+      }
+    },
+    {
+      "id": "PROD_022",
+      "true_label": 1,
+      "prob": 0.3557,
+      "pred_label": 1,
+      "pca_x": -0.412,
+      "pca_y": 2.338,
+      "sensors": {
+        "sensor_111": -2.95,
+        "sensor_058": 37.4,
+        "sensor_059": 25.0,
+        "sensor_008": -5774.0,
+        "sensor_062": 2.0,
+        "sensor_178": 11.16,
+        "sensor_165": 66.63,
+        "sensor_021": 2632.0,
+        "sensor_100": 13.45,
+        "sensor_093": 48.92
+      }
+    },
+    {
+      "id": "PROD_023",
+      "true_label": 0,
+      "prob": 0.6062,
+      "pred_label": 1,
+      "pca_x": -2.346,
+      "pca_y": -0.228,
+      "sensors": {
+        "sensor_111": 25.44,
+        "sensor_058": 76.02,
+        "sensor_059": 21.95,
+        "sensor_008": -6566.0,
+        "sensor_062": 2.86,
+        "sensor_178": 4.08,
+        "sensor_165": 65.29,
+        "sensor_021": 2975.5,
+        "sensor_100": 13.19,
+        "sensor_093": 30.71
+      }
+    },
+    {
+      "id": "PROD_024",
+      "true_label": 0,
+      "prob": 0.1211,
+      "pred_label": 0,
+      "pca_x": 1.021,
+      "pca_y": -1.171,
+      "sensors": {
+        "sensor_111": 1.64,
+        "sensor_058": 24.62,
+        "sensor_059": 21.42,
+        "sensor_008": -6310.25,
+        "sensor_062": 4.7,
+        "sensor_178": 7.96,
+        "sensor_165": 67.49,
+        "sensor_021": 3030.25,
+        "sensor_100": 7.38,
+        "sensor_093": 60.13
+      }
+    },
+    {
+      "id": "PROD_025",
+      "true_label": 0,
+      "prob": 0.1201,
+      "pred_label": 0,
+      "pca_x": 0.222,
+      "pca_y": 0.087,
+      "sensors": {
+        "sensor_111": -1.72,
+        "sensor_058": 35.15,
+        "sensor_059": 34.9,
+        "sensor_008": -5471.75,
+        "sensor_062": 1.3,
+        "sensor_178": 9.0,
+        "sensor_165": 70.13,
+        "sensor_021": 2776.25,
+        "sensor_100": 11.82,
+        "sensor_093": 35.7
+      }
+    },
+    {
+      "id": "PROD_026",
+      "true_label": 0,
+      "prob": 0.2311,
+      "pred_label": 0,
+      "pca_x": -1.806,
+      "pca_y": 0.21,
+      "sensors": {
+        "sensor_111": 3.31,
+        "sensor_058": 34.47,
+        "sensor_059": 19.16,
+        "sensor_008": -5544.0,
+        "sensor_062": 3.67,
+        "sensor_178": 5.88,
+        "sensor_165": 68.0,
+        "sensor_021": 2708.25,
+        "sensor_100": 17.25,
+        "sensor_093": 68.12
+      }
+    },
+    {
+      "id": "PROD_027",
+      "true_label": 0,
+      "prob": 0.3442,
+      "pred_label": 0,
+      "pca_x": -0.557,
+      "pca_y": -1.018,
+      "sensors": {
+        "sensor_111": -8.61,
+        "sensor_058": 41.4,
+        "sensor_059": 16.06,
+        "sensor_008": -6345.0,
+        "sensor_062": 1.25,
+        "sensor_178": 8.3,
+        "sensor_165": 63.34,
+        "sensor_021": 3169.25,
+        "sensor_100": 13.78,
+        "sensor_093": 39.74
+      }
+    },
+    {
+      "id": "PROD_028",
+      "true_label": 0,
+      "prob": 0.1751,
+      "pred_label": 0,
+      "pca_x": -1.239,
+      "pca_y": -2.353,
+      "sensors": {
+        "sensor_111": -5.13,
+        "sensor_058": 47.1,
+        "sensor_059": 9.5,
+        "sensor_008": -5476.25,
+        "sensor_062": 2.19,
+        "sensor_178": 8.38,
+        "sensor_165": 74.11,
+        "sensor_021": 2640.75,
+        "sensor_100": 15.11,
+        "sensor_093": 34.23
+      }
+    },
+    {
+      "id": "PROD_029",
+      "true_label": 0,
+      "prob": 0.3703,
+      "pred_label": 1,
+      "pca_x": -0.316,
+      "pca_y": 2.426,
+      "sensors": {
+        "sensor_111": 2.5,
+        "sensor_058": 71.32,
+        "sensor_059": 17.53,
+        "sensor_008": -5316.75,
+        "sensor_062": 1.9,
+        "sensor_178": 13.26,
+        "sensor_165": 68.41,
+        "sensor_021": 2675.25,
+        "sensor_100": 12.28,
+        "sensor_093": 32.81
+      }
+    },
+    {
+      "id": "PROD_030",
+      "true_label": 0,
+      "prob": 0.0454,
+      "pred_label": 0,
+      "pca_x": -0.94,
+      "pca_y": -0.661,
+      "sensors": {
+        "sensor_111": 3.07,
+        "sensor_058": 34.67,
+        "sensor_059": 16.76,
+        "sensor_008": -5524.5,
+        "sensor_062": 2.23,
+        "sensor_178": 8.91,
+        "sensor_165": 73.67,
+        "sensor_021": 2797.75,
+        "sensor_100": 13.73,
+        "sensor_093": 35.42
+      }
+    },
+    {
+      "id": "PROD_031",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": -0.535,
+      "pca_y": 0.334,
+      "sensors": {
+        "sensor_111": 23.82,
+        "sensor_058": 240.78,
+        "sensor_059": 29.17,
+        "sensor_008": -5447.75,
+        "sensor_062": 0.9,
+        "sensor_178": 9.52,
+        "sensor_165": 67.13,
+        "sensor_021": 2701.75,
+        "sensor_100": 9.27,
+        "sensor_093": 58.06
+      }
+    },
+    {
+      "id": "PROD_032",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": -1.872,
+      "pca_y": 13.931,
+      "sensors": {
+        "sensor_111": 15.95,
+        "sensor_058": 31.6,
+        "sensor_059": 140.2,
+        "sensor_008": -4490.5,
+        "sensor_062": 134.05,
+        "sensor_178": 4.21,
+        "sensor_165": 63.6,
+        "sensor_021": 2320.25,
+        "sensor_100": 12.04,
+        "sensor_093": 52.1
+      }
+    },
+    {
+      "id": "PROD_033",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": 0.003,
+      "pca_y": 0.335,
+      "sensors": {
+        "sensor_111": 4.97,
+        "sensor_058": 66.0,
+        "sensor_059": 21.44,
+        "sensor_008": -5664.0,
+        "sensor_062": 1.42,
+        "sensor_178": 13.28,
+        "sensor_165": 62.79,
+        "sensor_021": 2579.25,
+        "sensor_100": 8.91,
+        "sensor_093": 38.87
+      }
+    },
+    {
+      "id": "PROD_034",
+      "true_label": 0,
+      "prob": 0.1408,
+      "pred_label": 0,
+      "pca_x": -1.036,
+      "pca_y": -2.56,
+      "sensors": {
+        "sensor_111": 26.61,
+        "sensor_058": 45.48,
+        "sensor_059": 21.11,
+        "sensor_008": -6454.5,
+        "sensor_062": 2.02,
+        "sensor_178": 8.72,
+        "sensor_165": 71.24,
+        "sensor_021": 3102.75,
+        "sensor_100": 17.68,
+        "sensor_093": 37.4
+      }
+    },
+    {
+      "id": "PROD_035",
+      "true_label": 0,
+      "prob": 0.1782,
+      "pred_label": 0,
+      "pca_x": 1.577,
+      "pca_y": -0.332,
+      "sensors": {
+        "sensor_111": -5.41,
+        "sensor_058": 72.31,
+        "sensor_059": 12.07,
+        "sensor_008": -5370.5,
+        "sensor_062": 2.33,
+        "sensor_178": 4.41,
+        "sensor_165": 70.04,
+        "sensor_021": 2451.75,
+        "sensor_100": 12.37,
+        "sensor_093": 37.82
+      }
+    },
+    {
+      "id": "PROD_036",
+      "true_label": 0,
+      "prob": 0.1655,
+      "pred_label": 0,
+      "pca_x": -0.38,
+      "pca_y": -0.097,
+      "sensors": {
+        "sensor_111": 0.23,
+        "sensor_058": 37.28,
+        "sensor_059": 26.26,
+        "sensor_008": -5329.75,
+        "sensor_062": 2.67,
+        "sensor_178": 8.15,
+        "sensor_165": 67.49,
+        "sensor_021": 2643.25,
+        "sensor_100": 8.26,
+        "sensor_093": 27.98
+      }
+    },
+    {
+      "id": "PROD_037",
+      "true_label": 0,
+      "prob": 0.5,
+      "pred_label": 1,
+      "pca_x": -2.827,
+      "pca_y": 0.652,
+      "sensors": {
+        "sensor_111": 22.22,
+        "sensor_058": 104.24,
+        "sensor_059": 18.0,
+        "sensor_008": -5559.0,
+        "sensor_062": 2.36,
+        "sensor_178": 3.45,
+        "sensor_165": 63.9,
+        "sensor_021": 2594.75,
+        "sensor_100": 19.32,
+        "sensor_093": 52.98
+      }
+    },
+    {
+      "id": "PROD_038",
+      "true_label": 0,
+      "prob": 0.4066,
+      "pred_label": 1,
+      "pca_x": 0.677,
+      "pca_y": -1.009,
+      "sensors": {
+        "sensor_111": 7.98,
+        "sensor_058": 50.13,
+        "sensor_059": 14.03,
+        "sensor_008": -5160.25,
+        "sensor_062": 1.88,
+        "sensor_178": 13.37,
+        "sensor_165": 68.27,
+        "sensor_021": 2737.25,
+        "sensor_100": 13.8,
+        "sensor_093": 42.06
+      }
+    },
+    {
+      "id": "PROD_039",
+      "true_label": 0,
+      "prob": 0.2214,
+      "pred_label": 0,
+      "pca_x": 0.15,
+      "pca_y": -2.682,
+      "sensors": {
+        "sensor_111": 2.01,
+        "sensor_058": 28.69,
+        "sensor_059": 8.08,
+        "sensor_008": -5459.0,
+        "sensor_062": 3.42,
+        "sensor_178": 6.76,
+        "sensor_165": 66.46,
+        "sensor_021": 2697.25,
+        "sensor_100": 15.46,
+        "sensor_093": 49.45
+      }
+    },
+    {
+      "id": "PROD_040",
+      "true_label": 0,
+      "prob": 0.1592,
+      "pred_label": 0,
+      "pca_x": -1.165,
+      "pca_y": -1.491,
+      "sensors": {
+        "sensor_111": -2.81,
+        "sensor_058": 27.19,
+        "sensor_059": 12.23,
+        "sensor_008": -5391.75,
+        "sensor_062": 3.64,
+        "sensor_178": 9.57,
+        "sensor_165": 75.52,
+        "sensor_021": 2641.25,
+        "sensor_100": 16.45,
+        "sensor_093": 35.7
+      }
+    },
+    {
+      "id": "PROD_041",
+      "true_label": 0,
+      "prob": 0.0673,
+      "pred_label": 0,
+      "pca_x": -1.163,
+      "pca_y": -0.351,
+      "sensors": {
+        "sensor_111": 0.21,
+        "sensor_058": 26.92,
+        "sensor_059": 15.64,
+        "sensor_008": -5333.25,
+        "sensor_062": 2.98,
+        "sensor_178": 6.92,
+        "sensor_165": 72.12,
+        "sensor_021": 2768.75,
+        "sensor_100": 15.9,
+        "sensor_093": 43.57
+      }
+    },
+    {
+      "id": "PROD_042",
+      "true_label": 0,
+      "prob": 0.216,
+      "pred_label": 0,
+      "pca_x": 3.018,
+      "pca_y": -0.874,
+      "sensors": {
+        "sensor_111": 2.42,
+        "sensor_058": 38.22,
+        "sensor_059": 13.93,
+        "sensor_008": -5451.75,
+        "sensor_062": 4.54,
+        "sensor_178": 6.68,
+        "sensor_165": 70.78,
+        "sensor_021": 2461.5,
+        "sensor_100": 10.67,
+        "sensor_093": 43.33
+      }
+    },
+    {
+      "id": "PROD_043",
+      "true_label": 1,
+      "prob": 0.1861,
+      "pred_label": 0,
+      "pca_x": 0.681,
+      "pca_y": 1.305,
+      "sensors": {
+        "sensor_111": 2.42,
+        "sensor_058": 40.49,
+        "sensor_059": 102.52,
+        "sensor_008": -5311.5,
+        "sensor_062": 1.36,
+        "sensor_178": 8.55,
+        "sensor_165": 70.39,
+        "sensor_021": 3386.5,
+        "sensor_100": 13.71,
+        "sensor_093": 42.3
+      }
+    },
+    {
+      "id": "PROD_044",
+      "true_label": 1,
+      "prob": 0.2278,
+      "pred_label": 0,
+      "pca_x": -0.758,
+      "pca_y": -0.314,
+      "sensors": {
+        "sensor_111": 19.1,
+        "sensor_058": 26.55,
+        "sensor_059": 14.47,
+        "sensor_008": -5387.5,
+        "sensor_062": 2.82,
+        "sensor_178": 13.61,
+        "sensor_165": 66.98,
+        "sensor_021": 2673.75,
+        "sensor_100": 22.3,
+        "sensor_093": 27.34
+      }
+    },
+    {
+      "id": "PROD_045",
+      "true_label": 0,
+      "prob": 0.1477,
+      "pred_label": 0,
+      "pca_x": -2.556,
+      "pca_y": -0.325,
+      "sensors": {
+        "sensor_111": 18.28,
+        "sensor_058": 89.93,
+        "sensor_059": 17.63,
+        "sensor_008": -5659.25,
+        "sensor_062": 3.01,
+        "sensor_178": 15.95,
+        "sensor_165": 65.17,
+        "sensor_021": 2597.5,
+        "sensor_100": 11.36,
+        "sensor_093": 27.99
+      }
+    },
+    {
+      "id": "PROD_046",
+      "true_label": 0,
+      "prob": 0.3351,
+      "pred_label": 0,
+      "pca_x": -0.932,
+      "pca_y": 1.255,
+      "sensors": {
+        "sensor_111": -1.02,
+        "sensor_058": 64.77,
+        "sensor_059": 25.57,
+        "sensor_008": -5528.5,
+        "sensor_062": 1.99,
+        "sensor_178": 8.34,
+        "sensor_165": 66.79,
+        "sensor_021": 2757.25,
+        "sensor_100": 9.36,
+        "sensor_093": 37.89
+      }
+    },
+    {
+      "id": "PROD_047",
+      "true_label": 1,
+      "prob": 0.9144,
+      "pred_label": 1,
+      "pca_x": -0.357,
+      "pca_y": -1.166,
+      "sensors": {
+        "sensor_111": 23.31,
+        "sensor_058": 18.01,
+        "sensor_059": 6.46,
+        "sensor_008": -5553.0,
+        "sensor_062": 1.65,
+        "sensor_178": 4.79,
+        "sensor_165": 69.56,
+        "sensor_021": 2616.5,
+        "sensor_100": 7.94,
+        "sensor_093": 33.34
+      }
+    },
+    {
+      "id": "PROD_048",
+      "true_label": 1,
+      "prob": 0.7786,
+      "pred_label": 1,
+      "pca_x": -1.37,
+      "pca_y": 20.4,
+      "sensors": {
+        "sensor_111": 12.9,
+        "sensor_058": 74.67,
+        "sensor_059": 400.0,
+        "sensor_008": -1480.75,
+        "sensor_062": 400.0,
+        "sensor_178": 4.74,
+        "sensor_165": 61.33,
+        "sensor_021": 609.5,
+        "sensor_100": 17.22,
+        "sensor_093": 33.0
+      }
+    },
+    {
+      "id": "PROD_049",
+      "true_label": 0,
+      "prob": 0.068,
+      "pred_label": 0,
+      "pca_x": 1.507,
+      "pca_y": -0.64,
+      "sensors": {
+        "sensor_111": 0.06,
+        "sensor_058": 55.49,
+        "sensor_059": 32.37,
+        "sensor_008": -6020.75,
+        "sensor_062": 3.54,
+        "sensor_178": 9.56,
+        "sensor_165": 71.42,
+        "sensor_021": 2687.75,
+        "sensor_100": 12.83,
+        "sensor_093": 28.02
+      }
+    },
+    {
+      "id": "PROD_050",
+      "true_label": 0,
+      "prob": 0.6778,
+      "pred_label": 1,
+      "pca_x": 0.797,
+      "pca_y": -0.334,
+      "sensors": {
+        "sensor_111": -0.81,
+        "sensor_058": 253.79,
+        "sensor_059": 26.78,
+        "sensor_008": -6310.25,
+        "sensor_062": 3.79,
+        "sensor_178": 8.57,
+        "sensor_165": 69.42,
+        "sensor_021": 3028.25,
+        "sensor_100": 9.77,
+        "sensor_093": 56.33
+      }
+    },
+    {
+      "id": "PROD_051",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": 2.223,
+      "pca_y": -2.085,
+      "sensors": {
+        "sensor_111": 4.98,
+        "sensor_058": 49.61,
+        "sensor_059": 13.92,
+        "sensor_008": -5494.75,
+        "sensor_062": 3.2,
+        "sensor_178": 9.21,
+        "sensor_165": 73.93,
+        "sensor_021": 2694.5,
+        "sensor_100": 14.98,
+        "sensor_093": 30.06
+      }
+    },
+    {
+      "id": "PROD_052",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -0.741,
+      "pca_y": -0.016,
+      "sensors": {
+        "sensor_111": 0.95,
+        "sensor_058": 67.72,
+        "sensor_059": 12.4,
+        "sensor_008": -5353.0,
+        "sensor_062": 2.08,
+        "sensor_178": 11.54,
+        "sensor_165": 67.94,
+        "sensor_021": 2515.25,
+        "sensor_100": 15.94,
+        "sensor_093": 25.74
+      }
+    },
+    {
+      "id": "PROD_053",
+      "true_label": 1,
+      "prob": 0.3001,
+      "pred_label": 0,
+      "pca_x": -1.76,
+      "pca_y": -0.147,
+      "sensors": {
+        "sensor_111": -2.54,
+        "sensor_058": 107.52,
+        "sensor_059": 23.85,
+        "sensor_008": -5554.25,
+        "sensor_062": 3.58,
+        "sensor_178": 6.04,
+        "sensor_165": 71.07,
+        "sensor_021": 2633.25,
+        "sensor_100": 61.9,
+        "sensor_093": 35.42
+      }
+    },
+    {
+      "id": "PROD_054",
+      "true_label": 0,
+      "prob": 0.1091,
+      "pred_label": 0,
+      "pca_x": -0.843,
+      "pca_y": -0.171,
+      "sensors": {
+        "sensor_111": 3.19,
+        "sensor_058": 45.48,
+        "sensor_059": 47.87,
+        "sensor_008": -5699.75,
+        "sensor_062": 3.6,
+        "sensor_178": 8.34,
+        "sensor_165": 69.4,
+        "sensor_021": 2983.0,
+        "sensor_100": 16.41,
+        "sensor_093": 45.63
+      }
+    },
+    {
+      "id": "PROD_055",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": 0.679,
+      "pca_y": -0.072,
+      "sensors": {
+        "sensor_111": 3.73,
+        "sensor_058": 20.96,
+        "sensor_059": 20.07,
+        "sensor_008": -5611.5,
+        "sensor_062": 2.37,
+        "sensor_178": 8.48,
+        "sensor_165": 66.0,
+        "sensor_021": 2770.25,
+        "sensor_100": 16.32,
+        "sensor_093": 49.11
+      }
+    },
+    {
+      "id": "PROD_056",
+      "true_label": 0,
+      "prob": 0.1222,
+      "pred_label": 0,
+      "pca_x": -0.57,
+      "pca_y": -1.469,
+      "sensors": {
+        "sensor_111": -2.61,
+        "sensor_058": 31.71,
+        "sensor_059": 11.77,
+        "sensor_008": -5621.0,
+        "sensor_062": 2.29,
+        "sensor_178": 8.28,
+        "sensor_165": 75.59,
+        "sensor_021": 2600.5,
+        "sensor_100": 23.17,
+        "sensor_093": 36.71
+      }
+    },
+    {
+      "id": "PROD_057",
+      "true_label": 0,
+      "prob": 0.0605,
+      "pred_label": 0,
+      "pca_x": -1.152,
+      "pca_y": -0.339,
+      "sensors": {
+        "sensor_111": -0.15,
+        "sensor_058": 21.36,
+        "sensor_059": 14.21,
+        "sensor_008": -5770.75,
+        "sensor_062": 2.4,
+        "sensor_178": 12.35,
+        "sensor_165": 69.8,
+        "sensor_021": 2688.25,
+        "sensor_100": 9.68,
+        "sensor_093": 34.24
+      }
+    },
+    {
+      "id": "PROD_058",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -1.275,
+      "pca_y": -2.135,
+      "sensors": {
+        "sensor_111": 2.05,
+        "sensor_058": 60.66,
+        "sensor_059": 16.71,
+        "sensor_008": -5445.25,
+        "sensor_062": 4.77,
+        "sensor_178": 8.36,
+        "sensor_165": 67.98,
+        "sensor_021": 2514.0,
+        "sensor_100": 14.45,
+        "sensor_093": 52.87
+      }
+    },
+    {
+      "id": "PROD_059",
+      "true_label": 0,
+      "prob": 0.0088,
+      "pred_label": 0,
+      "pca_x": -0.347,
+      "pca_y": -1.032,
+      "sensors": {
+        "sensor_111": 2.94,
+        "sensor_058": 35.07,
+        "sensor_059": 24.56,
+        "sensor_008": -6389.5,
+        "sensor_062": 4.0,
+        "sensor_178": 12.32,
+        "sensor_165": 68.29,
+        "sensor_021": 3025.25,
+        "sensor_100": 11.99,
+        "sensor_093": 36.34
+      }
+    },
+    {
+      "id": "PROD_060",
+      "true_label": 0,
+      "prob": 0.1473,
+      "pred_label": 0,
+      "pca_x": -0.573,
+      "pca_y": -1.147,
+      "sensors": {
+        "sensor_111": -9.5,
+        "sensor_058": 86.82,
+        "sensor_059": 19.64,
+        "sensor_008": -6377.0,
+        "sensor_062": 3.73,
+        "sensor_178": 4.92,
+        "sensor_165": 64.9,
+        "sensor_021": 3044.5,
+        "sensor_100": 10.04,
+        "sensor_093": 22.67
+      }
+    },
+    {
+      "id": "PROD_061",
+      "true_label": 0,
+      "prob": 0.0582,
+      "pred_label": 0,
+      "pca_x": -1.681,
+      "pca_y": -1.15,
+      "sensors": {
+        "sensor_111": 1.53,
+        "sensor_058": 31.09,
+        "sensor_059": 7.26,
+        "sensor_008": -5421.75,
+        "sensor_062": 0.97,
+        "sensor_178": 7.88,
+        "sensor_165": 71.16,
+        "sensor_021": 2561.0,
+        "sensor_100": 91.11,
+        "sensor_093": 47.08
+      }
+    },
+    {
+      "id": "PROD_062",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -0.843,
+      "pca_y": 0.387,
+      "sensors": {
+        "sensor_111": 1.47,
+        "sensor_058": 33.33,
+        "sensor_059": 27.71,
+        "sensor_008": -5227.5,
+        "sensor_062": 3.83,
+        "sensor_178": 4.5,
+        "sensor_165": 67.48,
+        "sensor_021": 2566.25,
+        "sensor_100": 16.9,
+        "sensor_093": 61.06
+      }
+    },
+    {
+      "id": "PROD_063",
+      "true_label": 1,
+      "prob": 0.6752,
+      "pred_label": 1,
+      "pca_x": -0.254,
+      "pca_y": 22.695,
+      "sensors": {
+        "sensor_111": 2.52,
+        "sensor_058": 101.13,
+        "sensor_059": 400.0,
+        "sensor_008": -1368.75,
+        "sensor_062": 400.0,
+        "sensor_178": 2.25,
+        "sensor_165": 63.4,
+        "sensor_021": 653.75,
+        "sensor_100": 14.0,
+        "sensor_093": 33.45
+      }
+    },
+    {
+      "id": "PROD_064",
+      "true_label": 1,
+      "prob": 0.0555,
+      "pred_label": 0,
+      "pca_x": 1.796,
+      "pca_y": -0.482,
+      "sensors": {
+        "sensor_111": 1.17,
+        "sensor_058": 41.03,
+        "sensor_059": 18.38,
+        "sensor_008": -5389.5,
+        "sensor_062": 1.62,
+        "sensor_178": 9.91,
+        "sensor_165": 65.09,
+        "sensor_021": 2464.5,
+        "sensor_100": 14.53,
+        "sensor_093": 44.58
+      }
+    },
+    {
+      "id": "PROD_065",
+      "true_label": 1,
+      "prob": 0.7741,
+      "pred_label": 1,
+      "pca_x": -0.183,
+      "pca_y": -1.489,
+      "sensors": {
+        "sensor_111": -0.82,
+        "sensor_058": 69.35,
+        "sensor_059": 16.52,
+        "sensor_008": -5374.0,
+        "sensor_062": 1.32,
+        "sensor_178": 4.8,
+        "sensor_165": 72.47,
+        "sensor_021": 2609.25,
+        "sensor_100": 14.97,
+        "sensor_093": 16.91
+      }
+    },
+    {
+      "id": "PROD_066",
+      "true_label": 0,
+      "prob": 0.0825,
+      "pred_label": 0,
+      "pca_x": 1.107,
+      "pca_y": 0.409,
+      "sensors": {
+        "sensor_111": -1.48,
+        "sensor_058": 39.5,
+        "sensor_059": 30.19,
+        "sensor_008": -4416.5,
+        "sensor_062": 5.64,
+        "sensor_178": 15.34,
+        "sensor_165": 72.98,
+        "sensor_021": 2838.75,
+        "sensor_100": 67.44,
+        "sensor_093": 52.71
+      }
+    },
+    {
+      "id": "PROD_067",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": 17.067,
+      "pca_y": 1.195,
+      "sensors": {
+        "sensor_111": 16.65,
+        "sensor_058": 39.88,
+        "sensor_059": 99.91,
+        "sensor_008": -5748.5,
+        "sensor_062": 1.88,
+        "sensor_178": 9.16,
+        "sensor_165": 67.5,
+        "sensor_021": 3293.0,
+        "sensor_100": 16.41,
+        "sensor_093": 28.59
+      }
+    },
+    {
+      "id": "PROD_068",
+      "true_label": 0,
+      "prob": 0.1019,
+      "pred_label": 0,
+      "pca_x": -1.477,
+      "pca_y": -2.094,
+      "sensors": {
+        "sensor_111": -0.6,
+        "sensor_058": 37.08,
+        "sensor_059": 8.1,
+        "sensor_008": -5168.0,
+        "sensor_062": 1.02,
+        "sensor_178": 8.09,
+        "sensor_165": 68.2,
+        "sensor_021": 2531.75,
+        "sensor_100": 14.97,
+        "sensor_093": 18.24
+      }
+    },
+    {
+      "id": "PROD_069",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -1.793,
+      "pca_y": -1.608,
+      "sensors": {
+        "sensor_111": 4.92,
+        "sensor_058": 24.95,
+        "sensor_059": 13.42,
+        "sensor_008": -6354.5,
+        "sensor_062": 10.51,
+        "sensor_178": 13.34,
+        "sensor_165": 74.14,
+        "sensor_021": 2273.0,
+        "sensor_100": 21.77,
+        "sensor_093": 32.89
+      }
+    },
+    {
+      "id": "PROD_070",
+      "true_label": 0,
+      "prob": 0.0837,
+      "pred_label": 0,
+      "pca_x": 0.027,
+      "pca_y": -1.073,
+      "sensors": {
+        "sensor_111": 0.77,
+        "sensor_058": 63.69,
+        "sensor_059": 18.57,
+        "sensor_008": -6300.25,
+        "sensor_062": 5.72,
+        "sensor_178": 10.8,
+        "sensor_165": 69.76,
+        "sensor_021": 2881.5,
+        "sensor_100": 12.41,
+        "sensor_093": 34.03
+      }
+    },
+    {
+      "id": "PROD_071",
+      "true_label": 1,
+      "prob": 0.8968,
+      "pred_label": 1,
+      "pca_x": 1.893,
+      "pca_y": -0.155,
+      "sensors": {
+        "sensor_111": 27.41,
+        "sensor_058": 77.69,
+        "sensor_059": 22.3,
+        "sensor_008": -5376.25,
+        "sensor_062": 4.49,
+        "sensor_178": 4.48,
+        "sensor_165": 63.79,
+        "sensor_021": 2587.25,
+        "sensor_100": 16.16,
+        "sensor_093": 27.28
+      }
+    },
+    {
+      "id": "PROD_072",
+      "true_label": 0,
+      "prob": 0.2165,
+      "pred_label": 0,
+      "pca_x": 0.372,
+      "pca_y": -0.662,
+      "sensors": {
+        "sensor_111": -7.01,
+        "sensor_058": 48.14,
+        "sensor_059": 11.29,
+        "sensor_008": -5303.0,
+        "sensor_062": 2.51,
+        "sensor_178": 9.68,
+        "sensor_165": 71.07,
+        "sensor_021": 2463.25,
+        "sensor_100": 16.27,
+        "sensor_093": 32.18
+      }
+    },
+    {
+      "id": "PROD_073",
+      "true_label": 0,
+      "prob": 0.1549,
+      "pred_label": 0,
+      "pca_x": -1.286,
+      "pca_y": -0.754,
+      "sensors": {
+        "sensor_111": 0.7,
+        "sensor_058": 48.94,
+        "sensor_059": 11.35,
+        "sensor_008": -5339.5,
+        "sensor_062": 0.91,
+        "sensor_178": 4.37,
+        "sensor_165": 75.78,
+        "sensor_021": 2642.5,
+        "sensor_100": 9.38,
+        "sensor_093": 28.61
+      }
+    },
+    {
+      "id": "PROD_074",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": -0.121,
+      "pca_y": 14.758,
+      "sensors": {
+        "sensor_111": 11.56,
+        "sensor_058": 117.87,
+        "sensor_059": 213.75,
+        "sensor_008": -2609.25,
+        "sensor_062": 201.11,
+        "sensor_178": 7.62,
+        "sensor_165": 62.76,
+        "sensor_021": 1505.5,
+        "sensor_100": 17.97,
+        "sensor_093": 32.1
+      }
+    },
+    {
+      "id": "PROD_075",
+      "true_label": 0,
+      "prob": 0.0621,
+      "pred_label": 0,
+      "pca_x": 0.477,
+      "pca_y": -1.124,
+      "sensors": {
+        "sensor_111": -4.48,
+        "sensor_058": 74.64,
+        "sensor_059": 25.82,
+        "sensor_008": -6468.0,
+        "sensor_062": 2.06,
+        "sensor_178": 11.63,
+        "sensor_165": 66.16,
+        "sensor_021": 3083.25,
+        "sensor_100": 8.78,
+        "sensor_093": 34.12
+      }
+    },
+    {
+      "id": "PROD_076",
+      "true_label": 0,
+      "prob": 0.119,
+      "pred_label": 0,
+      "pca_x": -0.981,
+      "pca_y": -1.354,
+      "sensors": {
+        "sensor_111": 2.11,
+        "sensor_058": 58.64,
+        "sensor_059": 16.46,
+        "sensor_008": -5387.0,
+        "sensor_062": 2.08,
+        "sensor_178": 9.09,
+        "sensor_165": 75.01,
+        "sensor_021": 2606.75,
+        "sensor_100": 16.45,
+        "sensor_093": 61.35
+      }
+    },
+    {
+      "id": "PROD_077",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": -0.447,
+      "pca_y": -0.241,
+      "sensors": {
+        "sensor_111": 12.43,
+        "sensor_058": 68.66,
+        "sensor_059": 15.68,
+        "sensor_008": -5495.75,
+        "sensor_062": 1.73,
+        "sensor_178": 4.75,
+        "sensor_165": 62.83,
+        "sensor_021": 2703.75,
+        "sensor_100": 8.9,
+        "sensor_093": 50.98
+      }
+    },
+    {
+      "id": "PROD_078",
+      "true_label": 0,
+      "prob": 0.6871,
+      "pred_label": 1,
+      "pca_x": -0.75,
+      "pca_y": -1.27,
+      "sensors": {
+        "sensor_111": 22.1,
+        "sensor_058": 60.08,
+        "sensor_059": 20.05,
+        "sensor_008": -6401.25,
+        "sensor_062": 3.43,
+        "sensor_178": 7.59,
+        "sensor_165": 71.0,
+        "sensor_021": 3096.75,
+        "sensor_100": 13.34,
+        "sensor_093": 50.68
+      }
+    },
+    {
+      "id": "PROD_079",
+      "true_label": 0,
+      "prob": 0.0768,
+      "pred_label": 0,
+      "pca_x": -1.979,
+      "pca_y": -1.883,
+      "sensors": {
+        "sensor_111": 2.99,
+        "sensor_058": 35.33,
+        "sensor_059": 8.51,
+        "sensor_008": -5327.5,
+        "sensor_062": 4.4,
+        "sensor_178": 13.07,
+        "sensor_165": 72.11,
+        "sensor_021": 2586.25,
+        "sensor_100": 12.56,
+        "sensor_093": 45.58
+      }
+    },
+    {
+      "id": "PROD_080",
+      "true_label": 0,
+      "prob": 0.1704,
+      "pred_label": 0,
+      "pca_x": -0.069,
+      "pca_y": -1.648,
+      "sensors": {
+        "sensor_111": 3.25,
+        "sensor_058": 37.97,
+        "sensor_059": 10.32,
+        "sensor_008": -5558.0,
+        "sensor_062": 2.68,
+        "sensor_178": 7.17,
+        "sensor_165": 66.52,
+        "sensor_021": 2830.0,
+        "sensor_100": 16.84,
+        "sensor_093": 44.85
+      }
+    },
+    {
+      "id": "PROD_081",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": -0.598,
+      "pca_y": -2.41,
+      "sensors": {
+        "sensor_111": 1.82,
+        "sensor_058": 50.74,
+        "sensor_059": 20.34,
+        "sensor_008": -6349.75,
+        "sensor_062": 5.65,
+        "sensor_178": 3.9,
+        "sensor_165": 67.99,
+        "sensor_021": 3112.5,
+        "sensor_100": 9.73,
+        "sensor_093": 46.47
+      }
+    },
+    {
+      "id": "PROD_082",
+      "true_label": 0,
+      "prob": 0.299,
+      "pred_label": 0,
+      "pca_x": -0.537,
+      "pca_y": -0.929,
+      "sensors": {
+        "sensor_111": 3.85,
+        "sensor_058": 99.39,
+        "sensor_059": 9.06,
+        "sensor_008": -5527.0,
+        "sensor_062": 2.7,
+        "sensor_178": 8.18,
+        "sensor_165": 60.91,
+        "sensor_021": 2560.25,
+        "sensor_100": 13.49,
+        "sensor_093": 40.44
+      }
+    },
+    {
+      "id": "PROD_083",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": 4.161,
+      "pca_y": -1.558,
+      "sensors": {
+        "sensor_111": 1.71,
+        "sensor_058": 45.45,
+        "sensor_059": 9.75,
+        "sensor_008": -5545.25,
+        "sensor_062": 3.97,
+        "sensor_178": 4.09,
+        "sensor_165": 68.61,
+        "sensor_021": 2554.25,
+        "sensor_100": 23.35,
+        "sensor_093": 38.29
+      }
+    },
+    {
+      "id": "PROD_084",
+      "true_label": 0,
+      "prob": 0.0913,
+      "pred_label": 0,
+      "pca_x": 2.15,
+      "pca_y": -2.141,
+      "sensors": {
+        "sensor_111": -2.98,
+        "sensor_058": 18.81,
+        "sensor_059": 10.85,
+        "sensor_008": -5093.75,
+        "sensor_062": 5.87,
+        "sensor_178": 10.66,
+        "sensor_165": 73.0,
+        "sensor_021": 2719.75,
+        "sensor_100": 8.26,
+        "sensor_093": 26.04
+      }
+    },
+    {
+      "id": "PROD_085",
+      "true_label": 0,
+      "prob": 0.4142,
+      "pred_label": 1,
+      "pca_x": -1.139,
+      "pca_y": -0.141,
+      "sensors": {
+        "sensor_111": 20.81,
+        "sensor_058": 37.43,
+        "sensor_059": 12.07,
+        "sensor_008": -5307.75,
+        "sensor_062": 0.96,
+        "sensor_178": 8.11,
+        "sensor_165": 66.02,
+        "sensor_021": 2675.0,
+        "sensor_100": 58.68,
+        "sensor_093": 28.17
+      }
+    },
+    {
+      "id": "PROD_086",
+      "true_label": 0,
+      "prob": 0.2672,
+      "pred_label": 0,
+      "pca_x": -2.1,
+      "pca_y": -1.554,
+      "sensors": {
+        "sensor_111": 2.23,
+        "sensor_058": 55.46,
+        "sensor_059": 3.57,
+        "sensor_008": -5333.75,
+        "sensor_062": 1.44,
+        "sensor_178": 7.51,
+        "sensor_165": 66.43,
+        "sensor_021": 2605.75,
+        "sensor_100": 10.83,
+        "sensor_093": 45.76
+      }
+    },
+    {
+      "id": "PROD_087",
+      "true_label": 0,
+      "prob": 0.139,
+      "pred_label": 0,
+      "pca_x": -1.917,
+      "pca_y": -0.496,
+      "sensors": {
+        "sensor_111": 23.56,
+        "sensor_058": 78.69,
+        "sensor_059": 22.2,
+        "sensor_008": -6473.25,
+        "sensor_062": 1.97,
+        "sensor_178": 12.03,
+        "sensor_165": 62.97,
+        "sensor_021": 3031.75,
+        "sensor_100": 20.83,
+        "sensor_093": 36.86
+      }
+    },
+    {
+      "id": "PROD_088",
+      "true_label": 1,
+      "prob": 0.933,
+      "pred_label": 1,
+      "pca_x": -0.238,
+      "pca_y": -0.01,
+      "sensors": {
+        "sensor_111": 24.9,
+        "sensor_058": 172.08,
+        "sensor_059": 10.15,
+        "sensor_008": -5493.75,
+        "sensor_062": 3.08,
+        "sensor_178": 5.5,
+        "sensor_165": 68.32,
+        "sensor_021": 2550.5,
+        "sensor_100": 15.64,
+        "sensor_093": 31.91
+      }
+    },
+    {
+      "id": "PROD_089",
+      "true_label": 0,
+      "prob": 0.0242,
+      "pred_label": 0,
+      "pca_x": -0.514,
+      "pca_y": -1.709,
+      "sensors": {
+        "sensor_111": 2.63,
+        "sensor_058": 76.97,
+        "sensor_059": 16.1,
+        "sensor_008": -5776.75,
+        "sensor_062": 1.85,
+        "sensor_178": 10.38,
+        "sensor_165": 72.24,
+        "sensor_021": 2739.25,
+        "sensor_100": 19.68,
+        "sensor_093": 41.4
+      }
+    },
+    {
+      "id": "PROD_090",
+      "true_label": 0,
+      "prob": 0.0241,
+      "pred_label": 0,
+      "pca_x": -1.772,
+      "pca_y": -1.77,
+      "sensors": {
+        "sensor_111": 6.52,
+        "sensor_058": 70.75,
+        "sensor_059": 24.58,
+        "sensor_008": -6368.75,
+        "sensor_062": 3.55,
+        "sensor_178": 14.05,
+        "sensor_165": 67.57,
+        "sensor_021": 3129.0,
+        "sensor_100": 10.32,
+        "sensor_093": 47.66
+      }
+    },
+    {
+      "id": "PROD_091",
+      "true_label": 1,
+      "prob": 0.9266,
+      "pred_label": 1,
+      "pca_x": -0.671,
+      "pca_y": -0.779,
+      "sensors": {
+        "sensor_111": 2.58,
+        "sensor_058": 111.7,
+        "sensor_059": 14.6,
+        "sensor_008": -5384.25,
+        "sensor_062": 1.65,
+        "sensor_178": 4.5,
+        "sensor_165": 70.19,
+        "sensor_021": 2650.25,
+        "sensor_100": 10.64,
+        "sensor_093": 28.27
+      }
+    },
+    {
+      "id": "PROD_092",
+      "true_label": 0,
+      "prob": 0.1181,
+      "pred_label": 0,
+      "pca_x": -0.568,
+      "pca_y": -1.42,
+      "sensors": {
+        "sensor_111": -0.53,
+        "sensor_058": 47.72,
+        "sensor_059": 13.23,
+        "sensor_008": -5442.25,
+        "sensor_062": 1.92,
+        "sensor_178": 8.59,
+        "sensor_165": 68.87,
+        "sensor_021": 2608.0,
+        "sensor_100": 12.41,
+        "sensor_093": 41.26
+      }
+    },
+    {
+      "id": "PROD_093",
+      "true_label": 0,
+      "prob": 0.7286,
+      "pred_label": 1,
+      "pca_x": 0.101,
+      "pca_y": -0.713,
+      "sensors": {
+        "sensor_111": 18.6,
+        "sensor_058": 73.62,
+        "sensor_059": 12.89,
+        "sensor_008": -5584.5,
+        "sensor_062": 2.42,
+        "sensor_178": 6.13,
+        "sensor_165": 65.82,
+        "sensor_021": 2753.25,
+        "sensor_100": 14.99,
+        "sensor_093": 33.34
+      }
+    },
+    {
+      "id": "PROD_094",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": 1.077,
+      "pca_y": 0.021,
+      "sensors": {
+        "sensor_111": -5.33,
+        "sensor_058": 53.51,
+        "sensor_059": 27.68,
+        "sensor_008": -5332.5,
+        "sensor_062": 3.82,
+        "sensor_178": 5.38,
+        "sensor_165": 75.94,
+        "sensor_021": 2637.75,
+        "sensor_100": 13.5,
+        "sensor_093": 32.44
+      }
+    },
+    {
+      "id": "PROD_095",
+      "true_label": 1,
+      "prob": 0.093,
+      "pred_label": 0,
+      "pca_x": -0.966,
+      "pca_y": -0.571,
+      "sensors": {
+        "sensor_111": 0.76,
+        "sensor_058": 61.37,
+        "sensor_059": 9.74,
+        "sensor_008": -5511.75,
+        "sensor_062": 6.47,
+        "sensor_178": 7.76,
+        "sensor_165": 61.58,
+        "sensor_021": 2740.25,
+        "sensor_100": 23.31,
+        "sensor_093": 30.79
+      }
+    },
+    {
+      "id": "PROD_096",
+      "true_label": 0,
+      "prob": 0.042,
+      "pred_label": 0,
+      "pca_x": -1.615,
+      "pca_y": -0.121,
+      "sensors": {
+        "sensor_111": 0.38,
+        "sensor_058": 37.15,
+        "sensor_059": 13.89,
+        "sensor_008": -5412.25,
+        "sensor_062": 3.32,
+        "sensor_178": 12.97,
+        "sensor_165": 76.88,
+        "sensor_021": 2641.25,
+        "sensor_100": 17.86,
+        "sensor_093": 51.71
+      }
+    },
+    {
+      "id": "PROD_097",
+      "true_label": 0,
+      "prob": 0.0663,
+      "pred_label": 0,
+      "pca_x": -0.539,
+      "pca_y": 0.92,
+      "sensors": {
+        "sensor_111": -4.59,
+        "sensor_058": 45.12,
+        "sensor_059": 17.98,
+        "sensor_008": -5248.25,
+        "sensor_062": 2.65,
+        "sensor_178": 9.47,
+        "sensor_165": 69.87,
+        "sensor_021": 2575.0,
+        "sensor_100": 13.16,
+        "sensor_093": 30.62
+      }
+    },
+    {
+      "id": "PROD_098",
+      "true_label": 1,
+      "prob": 0.3921,
+      "pred_label": 1,
+      "pca_x": 1.385,
+      "pca_y": -1.366,
+      "sensors": {
+        "sensor_111": -1.87,
+        "sensor_058": 31.08,
+        "sensor_059": 12.61,
+        "sensor_008": -5399.75,
+        "sensor_062": 2.88,
+        "sensor_178": 5.61,
+        "sensor_165": 70.67,
+        "sensor_021": 2506.0,
+        "sensor_100": 13.73,
+        "sensor_093": 41.89
+      }
+    },
+    {
+      "id": "PROD_099",
+      "true_label": 1,
+      "prob": 0.7783,
+      "pred_label": 1,
+      "pca_x": -0.65,
+      "pca_y": 0.735,
+      "sensors": {
+        "sensor_111": 1.37,
+        "sensor_058": 62.03,
+        "sensor_059": 18.03,
+        "sensor_008": -6278.5,
+        "sensor_062": 4.11,
+        "sensor_178": 7.59,
+        "sensor_165": 63.61,
+        "sensor_021": 3177.25,
+        "sensor_100": 9.18,
+        "sensor_093": 52.27
+      }
+    },
+    {
+      "id": "PROD_100",
+      "true_label": 0,
+      "prob": 0.671,
+      "pred_label": 1,
+      "pca_x": -2.871,
+      "pca_y": 11.103,
+      "sensors": {
+        "sensor_111": -5.87,
+        "sensor_058": 79.54,
+        "sensor_059": 139.53,
+        "sensor_008": -4228.0,
+        "sensor_062": 134.62,
+        "sensor_178": 13.17,
+        "sensor_165": 63.39,
+        "sensor_021": 2038.25,
+        "sensor_100": 69.2,
+        "sensor_093": 58.06
+      }
+    },
+    {
+      "id": "PROD_101",
+      "true_label": 1,
+      "prob": 0.7394,
+      "pred_label": 1,
+      "pca_x": -1.44,
+      "pca_y": 0.804,
+      "sensors": {
+        "sensor_111": 13.68,
+        "sensor_058": 74.79,
+        "sensor_059": 21.05,
+        "sensor_008": -5033.0,
+        "sensor_062": 2.57,
+        "sensor_178": 9.19,
+        "sensor_165": 66.46,
+        "sensor_021": 2398.75,
+        "sensor_100": 21.5,
+        "sensor_093": 48.47
+      }
+    },
+    {
+      "id": "PROD_102",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": -1.555,
+      "pca_y": 0.264,
+      "sensors": {
+        "sensor_111": 2.87,
+        "sensor_058": 244.27,
+        "sensor_059": 18.16,
+        "sensor_008": -5575.0,
+        "sensor_062": 1.21,
+        "sensor_178": 12.1,
+        "sensor_165": 72.5,
+        "sensor_021": 2703.5,
+        "sensor_100": 16.41,
+        "sensor_093": 36.47
+      }
+    },
+    {
+      "id": "PROD_103",
+      "true_label": 0,
+      "prob": 0.0749,
+      "pred_label": 0,
+      "pca_x": 0.444,
+      "pca_y": -1.33,
+      "sensors": {
+        "sensor_111": 1.51,
+        "sensor_058": 40.47,
+        "sensor_059": 26.39,
+        "sensor_008": -6447.25,
+        "sensor_062": 3.08,
+        "sensor_178": 10.36,
+        "sensor_165": 66.28,
+        "sensor_021": 2966.75,
+        "sensor_100": 10.03,
+        "sensor_093": 21.98
+      }
+    },
+    {
+      "id": "PROD_104",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": 0.609,
+      "pca_y": -0.039,
+      "sensors": {
+        "sensor_111": 3.43,
+        "sensor_058": 47.06,
+        "sensor_059": 17.07,
+        "sensor_008": -5773.0,
+        "sensor_062": 1.32,
+        "sensor_178": 11.74,
+        "sensor_165": 75.26,
+        "sensor_021": 2747.75,
+        "sensor_100": 12.62,
+        "sensor_093": 26.37
+      }
+    },
+    {
+      "id": "PROD_105",
+      "true_label": 0,
+      "prob": 0.3581,
+      "pred_label": 1,
+      "pca_x": -0.887,
+      "pca_y": -0.365,
+      "sensors": {
+        "sensor_111": -0.95,
+        "sensor_058": 40.12,
+        "sensor_059": 15.73,
+        "sensor_008": -5207.75,
+        "sensor_062": 3.12,
+        "sensor_178": 11.88,
+        "sensor_165": 69.01,
+        "sensor_021": 2535.75,
+        "sensor_100": 17.03,
+        "sensor_093": 49.52
+      }
+    },
+    {
+      "id": "PROD_106",
+      "true_label": 0,
+      "prob": 0.2066,
+      "pred_label": 0,
+      "pca_x": -0.465,
+      "pca_y": -1.022,
+      "sensors": {
+        "sensor_111": -3.06,
+        "sensor_058": 44.25,
+        "sensor_059": 17.44,
+        "sensor_008": -5711.75,
+        "sensor_062": 4.23,
+        "sensor_178": 9.85,
+        "sensor_165": 76.6,
+        "sensor_021": 2757.25,
+        "sensor_100": 11.72,
+        "sensor_093": 36.49
+      }
+    },
+    {
+      "id": "PROD_107",
+      "true_label": 1,
+      "prob": 0.8466,
+      "pred_label": 1,
+      "pca_x": -1.316,
+      "pca_y": 1.797,
+      "sensors": {
+        "sensor_111": 6.66,
+        "sensor_058": 44.86,
+        "sensor_059": 16.98,
+        "sensor_008": -5456.25,
+        "sensor_062": 1.89,
+        "sensor_178": 5.59,
+        "sensor_165": 67.63,
+        "sensor_021": 2620.0,
+        "sensor_100": 23.54,
+        "sensor_093": 35.75
+      }
+    },
+    {
+      "id": "PROD_108",
+      "true_label": 0,
+      "prob": 0.066,
+      "pred_label": 0,
+      "pca_x": -0.919,
+      "pca_y": -0.583,
+      "sensors": {
+        "sensor_111": 1.82,
+        "sensor_058": 39.71,
+        "sensor_059": 15.86,
+        "sensor_008": -5742.25,
+        "sensor_062": 2.73,
+        "sensor_178": 9.33,
+        "sensor_165": 66.38,
+        "sensor_021": 2704.25,
+        "sensor_100": 15.67,
+        "sensor_093": 27.96
+      }
+    },
+    {
+      "id": "PROD_109",
+      "true_label": 0,
+      "prob": 0.0768,
+      "pred_label": 0,
+      "pca_x": 0.163,
+      "pca_y": 1.248,
+      "sensors": {
+        "sensor_111": 1.47,
+        "sensor_058": 71.97,
+        "sensor_059": 8.21,
+        "sensor_008": -5874.25,
+        "sensor_062": 2.4,
+        "sensor_178": 10.74,
+        "sensor_165": 68.2,
+        "sensor_021": 2582.0,
+        "sensor_100": 12.19,
+        "sensor_093": 55.27
+      }
+    },
+    {
+      "id": "PROD_110",
+      "true_label": 0,
+      "prob": 0.0998,
+      "pred_label": 0,
+      "pca_x": 0.296,
+      "pca_y": -1.422,
+      "sensors": {
+        "sensor_111": 4.15,
+        "sensor_058": 92.46,
+        "sensor_059": 7.58,
+        "sensor_008": -5247.75,
+        "sensor_062": 1.66,
+        "sensor_178": 9.16,
+        "sensor_165": 67.76,
+        "sensor_021": 2638.75,
+        "sensor_100": 15.94,
+        "sensor_093": 47.32
+      }
+    },
+    {
+      "id": "PROD_111",
+      "true_label": 0,
+      "prob": 0.4613,
+      "pred_label": 1,
+      "pca_x": -2.785,
+      "pca_y": 0.151,
+      "sensors": {
+        "sensor_111": -6.48,
+        "sensor_058": 115.35,
+        "sensor_059": 17.49,
+        "sensor_008": -5491.5,
+        "sensor_062": 1.5,
+        "sensor_178": 3.84,
+        "sensor_165": 64.8,
+        "sensor_021": 2578.5,
+        "sensor_100": 69.2,
+        "sensor_093": 24.52
+      }
+    },
+    {
+      "id": "PROD_112",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": 0.335,
+      "pca_y": -0.476,
+      "sensors": {
+        "sensor_111": 20.83,
+        "sensor_058": 98.95,
+        "sensor_059": 23.23,
+        "sensor_008": -6057.25,
+        "sensor_062": 3.15,
+        "sensor_178": 6.87,
+        "sensor_165": 69.07,
+        "sensor_021": 2609.0,
+        "sensor_100": 14.26,
+        "sensor_093": 42.78
+      }
+    },
+    {
+      "id": "PROD_113",
+      "true_label": 0,
+      "prob": 0.1503,
+      "pred_label": 0,
+      "pca_x": 1.345,
+      "pca_y": -2.947,
+      "sensors": {
+        "sensor_111": 1.57,
+        "sensor_058": 46.02,
+        "sensor_059": 14.53,
+        "sensor_008": -4958.0,
+        "sensor_062": 5.42,
+        "sensor_178": 9.89,
+        "sensor_165": 72.49,
+        "sensor_021": 2573.25,
+        "sensor_100": 17.84,
+        "sensor_093": 45.93
+      }
+    },
+    {
+      "id": "PROD_114",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -1.905,
+      "pca_y": -0.632,
+      "sensors": {
+        "sensor_111": -1.36,
+        "sensor_058": 35.81,
+        "sensor_059": 19.37,
+        "sensor_008": -5241.0,
+        "sensor_062": 3.61,
+        "sensor_178": 10.0,
+        "sensor_165": 70.47,
+        "sensor_021": 2426.5,
+        "sensor_100": 12.63,
+        "sensor_093": 65.51
+      }
+    },
+    {
+      "id": "PROD_115",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -2.186,
+      "pca_y": -2.049,
+      "sensors": {
+        "sensor_111": 3.81,
+        "sensor_058": 69.78,
+        "sensor_059": 18.71,
+        "sensor_008": -5260.25,
+        "sensor_062": 3.78,
+        "sensor_178": 8.38,
+        "sensor_165": 72.84,
+        "sensor_021": 2597.75,
+        "sensor_100": 60.16,
+        "sensor_093": 33.68
+      }
+    },
+    {
+      "id": "PROD_116",
+      "true_label": 0,
+      "prob": 0.0595,
+      "pred_label": 0,
+      "pca_x": 3.449,
+      "pca_y": 0.199,
+      "sensors": {
+        "sensor_111": -0.41,
+        "sensor_058": 32.94,
+        "sensor_059": 25.06,
+        "sensor_008": -6724.5,
+        "sensor_062": 5.54,
+        "sensor_178": 14.29,
+        "sensor_165": 70.1,
+        "sensor_021": 3000.25,
+        "sensor_100": 11.84,
+        "sensor_093": 43.94
+      }
+    },
+    {
+      "id": "PROD_117",
+      "true_label": 0,
+      "prob": 0.2244,
+      "pred_label": 0,
+      "pca_x": 0.295,
+      "pca_y": -1.876,
+      "sensors": {
+        "sensor_111": -0.99,
+        "sensor_058": 24.31,
+        "sensor_059": 20.16,
+        "sensor_008": -5477.5,
+        "sensor_062": 0.62,
+        "sensor_178": 5.54,
+        "sensor_165": 71.54,
+        "sensor_021": 2599.25,
+        "sensor_100": 16.45,
+        "sensor_093": 29.45
+      }
+    },
+    {
+      "id": "PROD_118",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": 0.772,
+      "pca_y": -1.207,
+      "sensors": {
+        "sensor_111": 5.03,
+        "sensor_058": 113.0,
+        "sensor_059": 7.22,
+        "sensor_008": -5546.5,
+        "sensor_062": 0.96,
+        "sensor_178": 5.1,
+        "sensor_165": 69.07,
+        "sensor_021": 2632.75,
+        "sensor_100": 26.57,
+        "sensor_093": 17.55
+      }
+    },
+    {
+      "id": "PROD_119",
+      "true_label": 0,
+      "prob": 0.2276,
+      "pred_label": 0,
+      "pca_x": -0.353,
+      "pca_y": -0.184,
+      "sensors": {
+        "sensor_111": 0.25,
+        "sensor_058": 32.11,
+        "sensor_059": 13.44,
+        "sensor_008": -5501.0,
+        "sensor_062": 4.3,
+        "sensor_178": 8.72,
+        "sensor_165": 68.7,
+        "sensor_021": 2543.75,
+        "sensor_100": 12.57,
+        "sensor_093": 51.42
+      }
+    },
+    {
+      "id": "PROD_120",
+      "true_label": 1,
+      "prob": 0.7059,
+      "pred_label": 1,
+      "pca_x": -0.423,
+      "pca_y": 0.648,
+      "sensors": {
+        "sensor_111": 9.88,
+        "sensor_058": 60.84,
+        "sensor_059": 19.29,
+        "sensor_008": -5392.25,
+        "sensor_062": 2.26,
+        "sensor_178": 8.13,
+        "sensor_165": 66.69,
+        "sensor_021": 2731.75,
+        "sensor_100": 18.34,
+        "sensor_093": 38.13
+      }
+    },
+    {
+      "id": "PROD_121",
+      "true_label": 1,
+      "prob": 0.7786,
+      "pred_label": 1,
+      "pca_x": -0.244,
+      "pca_y": 0.792,
+      "sensors": {
+        "sensor_111": -1.42,
+        "sensor_058": 400.0,
+        "sensor_059": 13.41,
+        "sensor_008": -4970.75,
+        "sensor_062": 3.17,
+        "sensor_178": 7.42,
+        "sensor_165": 67.71,
+        "sensor_021": 2714.75,
+        "sensor_100": 7.51,
+        "sensor_093": 28.02
+      }
+    },
+    {
+      "id": "PROD_122",
+      "true_label": 0,
+      "prob": 0.1311,
+      "pred_label": 0,
+      "pca_x": 0.092,
+      "pca_y": 2.301,
+      "sensors": {
+        "sensor_111": 3.31,
+        "sensor_058": 50.66,
+        "sensor_059": 102.5,
+        "sensor_008": -5394.75,
+        "sensor_062": 1.23,
+        "sensor_178": 7.21,
+        "sensor_165": 68.59,
+        "sensor_021": 3556.0,
+        "sensor_100": 11.12,
+        "sensor_093": 46.32
+      }
+    },
+    {
+      "id": "PROD_123",
+      "true_label": 0,
+      "prob": 0.1363,
+      "pred_label": 0,
+      "pca_x": -0.569,
+      "pca_y": -0.626,
+      "sensors": {
+        "sensor_111": -1.66,
+        "sensor_058": 49.43,
+        "sensor_059": 11.26,
+        "sensor_008": -5145.25,
+        "sensor_062": 3.22,
+        "sensor_178": 8.1,
+        "sensor_165": 68.51,
+        "sensor_021": 2601.25,
+        "sensor_100": 18.4,
+        "sensor_093": 49.09
+      }
+    },
+    {
+      "id": "PROD_124",
+      "true_label": 0,
+      "prob": 0.0408,
+      "pred_label": 0,
+      "pca_x": -0.946,
+      "pca_y": 0.699,
+      "sensors": {
+        "sensor_111": -2.66,
+        "sensor_058": 44.38,
+        "sensor_059": 22.32,
+        "sensor_008": -5371.5,
+        "sensor_062": 4.23,
+        "sensor_178": 6.35,
+        "sensor_165": 69.96,
+        "sensor_021": 2696.75,
+        "sensor_100": 17.08,
+        "sensor_093": 38.76
+      }
+    },
+    {
+      "id": "PROD_125",
+      "true_label": 1,
+      "prob": 0.622,
+      "pred_label": 1,
+      "pca_x": 0.257,
+      "pca_y": -0.829,
+      "sensors": {
+        "sensor_111": 5.66,
+        "sensor_058": 35.33,
+        "sensor_059": 13.77,
+        "sensor_008": -5459.0,
+        "sensor_062": 1.96,
+        "sensor_178": 4.8,
+        "sensor_165": 66.31,
+        "sensor_021": 2635.75,
+        "sensor_100": 13.28,
+        "sensor_093": 51.74
+      }
+    },
+    {
+      "id": "PROD_126",
+      "true_label": 1,
+      "prob": 0.0526,
+      "pred_label": 0,
+      "pca_x": -0.246,
+      "pca_y": -0.342,
+      "sensors": {
+        "sensor_111": 0.56,
+        "sensor_058": 29.26,
+        "sensor_059": 7.43,
+        "sensor_008": -5580.75,
+        "sensor_062": 4.07,
+        "sensor_178": 8.64,
+        "sensor_165": 66.32,
+        "sensor_021": 2652.0,
+        "sensor_100": 13.28,
+        "sensor_093": 47.41
+      }
+    },
+    {
+      "id": "PROD_127",
+      "true_label": 0,
+      "prob": 0.5244,
+      "pred_label": 1,
+      "pca_x": -0.827,
+      "pca_y": -1.832,
+      "sensors": {
+        "sensor_111": -3.77,
+        "sensor_058": 24.22,
+        "sensor_059": 12.19,
+        "sensor_008": -5656.75,
+        "sensor_062": 4.39,
+        "sensor_178": 7.82,
+        "sensor_165": 72.46,
+        "sensor_021": 2560.0,
+        "sensor_100": 23.28,
+        "sensor_093": 37.64
+      }
+    },
+    {
+      "id": "PROD_128",
+      "true_label": 0,
+      "prob": 0.5226,
+      "pred_label": 1,
+      "pca_x": 0.257,
+      "pca_y": 0.258,
+      "sensors": {
+        "sensor_111": 21.9,
+        "sensor_058": 33.19,
+        "sensor_059": 22.78,
+        "sensor_008": -5683.75,
+        "sensor_062": 3.29,
+        "sensor_178": 4.9,
+        "sensor_165": 64.71,
+        "sensor_021": 2713.25,
+        "sensor_100": 6.55,
+        "sensor_093": 42.15
+      }
+    },
+    {
+      "id": "PROD_129",
+      "true_label": 0,
+      "prob": 0.1205,
+      "pred_label": 0,
+      "pca_x": -1.913,
+      "pca_y": -1.291,
+      "sensors": {
+        "sensor_111": -3.14,
+        "sensor_058": 44.04,
+        "sensor_059": 25.39,
+        "sensor_008": -5529.25,
+        "sensor_062": 1.74,
+        "sensor_178": 8.94,
+        "sensor_165": 72.56,
+        "sensor_021": 2536.75,
+        "sensor_100": 67.37,
+        "sensor_093": 48.99
+      }
+    },
+    {
+      "id": "PROD_130",
+      "true_label": 1,
+      "prob": 0.7342,
+      "pred_label": 1,
+      "pca_x": -1.413,
+      "pca_y": 0.748,
+      "sensors": {
+        "sensor_111": 16.02,
+        "sensor_058": 54.07,
+        "sensor_059": 20.85,
+        "sensor_008": -6431.75,
+        "sensor_062": 4.66,
+        "sensor_178": 6.44,
+        "sensor_165": 68.16,
+        "sensor_021": 2959.75,
+        "sensor_100": 14.79,
+        "sensor_093": 16.82
+      }
+    },
+    {
+      "id": "PROD_131",
+      "true_label": 0,
+      "prob": 0.0762,
+      "pred_label": 0,
+      "pca_x": -0.211,
+      "pca_y": -0.737,
+      "sensors": {
+        "sensor_111": 2.11,
+        "sensor_058": 68.57,
+        "sensor_059": 11.46,
+        "sensor_008": -5521.0,
+        "sensor_062": 1.33,
+        "sensor_178": 8.4,
+        "sensor_165": 69.53,
+        "sensor_021": 2617.5,
+        "sensor_100": 56.76,
+        "sensor_093": 49.18
+      }
+    },
+    {
+      "id": "PROD_132",
+      "true_label": 1,
+      "prob": 0.716,
+      "pred_label": 1,
+      "pca_x": -2.869,
+      "pca_y": 1.123,
+      "sensors": {
+        "sensor_111": 3.23,
+        "sensor_058": 87.42,
+        "sensor_059": 20.05,
+        "sensor_008": -4961.25,
+        "sensor_062": 2.98,
+        "sensor_178": 3.87,
+        "sensor_165": 65.8,
+        "sensor_021": 2703.75,
+        "sensor_100": 7.92,
+        "sensor_093": 54.32
+      }
+    },
+    {
+      "id": "PROD_133",
+      "true_label": 0,
+      "prob": 0.0508,
+      "pred_label": 0,
+      "pca_x": -0.812,
+      "pca_y": -0.771,
+      "sensors": {
+        "sensor_111": -1.46,
+        "sensor_058": 56.51,
+        "sensor_059": 17.82,
+        "sensor_008": -6351.0,
+        "sensor_062": 5.03,
+        "sensor_178": 7.23,
+        "sensor_165": 63.82,
+        "sensor_021": 3131.25,
+        "sensor_100": 9.38,
+        "sensor_093": 58.18
+      }
+    },
+    {
+      "id": "PROD_134",
+      "true_label": 0,
+      "prob": 0.1179,
+      "pred_label": 0,
+      "pca_x": 0.536,
+      "pca_y": -0.552,
+      "sensors": {
+        "sensor_111": -0.96,
+        "sensor_058": 70.74,
+        "sensor_059": 21.06,
+        "sensor_008": -6283.75,
+        "sensor_062": 2.86,
+        "sensor_178": 8.29,
+        "sensor_165": 68.06,
+        "sensor_021": 2996.25,
+        "sensor_100": 13.1,
+        "sensor_093": 40.34
+      }
+    },
+    {
+      "id": "PROD_135",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": 0.907,
+      "pca_y": -0.983,
+      "sensors": {
+        "sensor_111": 8.98,
+        "sensor_058": 129.5,
+        "sensor_059": 21.93,
+        "sensor_008": -6375.0,
+        "sensor_062": 3.68,
+        "sensor_178": 11.43,
+        "sensor_165": 66.86,
+        "sensor_021": 3078.25,
+        "sensor_100": 14.04,
+        "sensor_093": 40.09
+      }
+    },
+    {
+      "id": "PROD_136",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": 0.083,
+      "pca_y": -0.402,
+      "sensors": {
+        "sensor_111": -3.9,
+        "sensor_058": 35.25,
+        "sensor_059": 23.3,
+        "sensor_008": -6344.25,
+        "sensor_062": 2.74,
+        "sensor_178": 8.89,
+        "sensor_165": 65.1,
+        "sensor_021": 3095.0,
+        "sensor_100": 21.26,
+        "sensor_093": 52.72
+      }
+    },
+    {
+      "id": "PROD_137",
+      "true_label": 1,
+      "prob": 0.6087,
+      "pred_label": 1,
+      "pca_x": -0.054,
+      "pca_y": -2.525,
+      "sensors": {
+        "sensor_111": 5.05,
+        "sensor_058": 48.1,
+        "sensor_059": 8.63,
+        "sensor_008": -4929.5,
+        "sensor_062": 1.3,
+        "sensor_178": 7.28,
+        "sensor_165": 70.64,
+        "sensor_021": 2478.5,
+        "sensor_100": 8.2,
+        "sensor_093": 33.5
+      }
+    },
+    {
+      "id": "PROD_138",
+      "true_label": 0,
+      "prob": 0.1019,
+      "pred_label": 0,
+      "pca_x": -1.245,
+      "pca_y": 0.206,
+      "sensors": {
+        "sensor_111": -1.31,
+        "sensor_058": 57.83,
+        "sensor_059": 18.55,
+        "sensor_008": -6301.5,
+        "sensor_062": 3.46,
+        "sensor_178": 3.57,
+        "sensor_165": 71.44,
+        "sensor_021": 2625.25,
+        "sensor_100": 11.77,
+        "sensor_093": 42.33
+      }
+    },
+    {
+      "id": "PROD_139",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": -0.993,
+      "pca_y": 1.084,
+      "sensors": {
+        "sensor_111": 14.07,
+        "sensor_058": 23.23,
+        "sensor_059": 10.57,
+        "sensor_008": -6124.75,
+        "sensor_062": 3.7,
+        "sensor_178": 12.14,
+        "sensor_165": 66.36,
+        "sensor_021": 2648.0,
+        "sensor_100": 19.0,
+        "sensor_093": 32.9
+      }
+    },
+    {
+      "id": "PROD_140",
+      "true_label": 0,
+      "prob": 0.369,
+      "pred_label": 1,
+      "pca_x": 0.901,
+      "pca_y": 1.163,
+      "sensors": {
+        "sensor_111": 9.33,
+        "sensor_058": 39.29,
+        "sensor_059": 38.94,
+        "sensor_008": -5537.5,
+        "sensor_062": 2.52,
+        "sensor_178": 10.66,
+        "sensor_165": 64.0,
+        "sensor_021": 2483.5,
+        "sensor_100": 15.37,
+        "sensor_093": 53.53
+      }
+    },
+    {
+      "id": "PROD_141",
+      "true_label": 0,
+      "prob": 0.0416,
+      "pred_label": 0,
+      "pca_x": -0.879,
+      "pca_y": -1.551,
+      "sensors": {
+        "sensor_111": 3.37,
+        "sensor_058": 52.13,
+        "sensor_059": 20.71,
+        "sensor_008": -5522.0,
+        "sensor_062": 1.84,
+        "sensor_178": 8.87,
+        "sensor_165": 74.01,
+        "sensor_021": 2752.25,
+        "sensor_100": 60.16,
+        "sensor_093": 53.98
+      }
+    },
+    {
+      "id": "PROD_142",
+      "true_label": 0,
+      "prob": 0.0906,
+      "pred_label": 0,
+      "pca_x": 1.04,
+      "pca_y": -0.586,
+      "sensors": {
+        "sensor_111": 0.57,
+        "sensor_058": 36.77,
+        "sensor_059": 21.69,
+        "sensor_008": -5932.0,
+        "sensor_062": 5.66,
+        "sensor_178": 8.25,
+        "sensor_165": 67.82,
+        "sensor_021": 2641.5,
+        "sensor_100": 18.1,
+        "sensor_093": 45.92
+      }
+    },
+    {
+      "id": "PROD_143",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": 0.491,
+      "pca_y": -1.578,
+      "sensors": {
+        "sensor_111": -1.6,
+        "sensor_058": 35.6,
+        "sensor_059": 11.75,
+        "sensor_008": -5768.0,
+        "sensor_062": 1.01,
+        "sensor_178": 8.77,
+        "sensor_165": 73.62,
+        "sensor_021": 2748.75,
+        "sensor_100": 14.93,
+        "sensor_093": 32.44
+      }
+    },
+    {
+      "id": "PROD_144",
+      "true_label": 1,
+      "prob": 0.7784,
+      "pred_label": 1,
+      "pca_x": -1.297,
+      "pca_y": -1.316,
+      "sensors": {
+        "sensor_111": 26.77,
+        "sensor_058": 68.76,
+        "sensor_059": 18.42,
+        "sensor_008": -6362.5,
+        "sensor_062": 2.33,
+        "sensor_178": 9.52,
+        "sensor_165": 65.8,
+        "sensor_021": 3051.25,
+        "sensor_100": 5.18,
+        "sensor_093": 18.78
+      }
+    },
+    {
+      "id": "PROD_145",
+      "true_label": 0,
+      "prob": 0.2347,
+      "pred_label": 0,
+      "pca_x": -1.59,
+      "pca_y": 0.153,
+      "sensors": {
+        "sensor_111": 28.64,
+        "sensor_058": 68.25,
+        "sensor_059": 19.36,
+        "sensor_008": -6518.25,
+        "sensor_062": 2.47,
+        "sensor_178": 7.6,
+        "sensor_165": 67.52,
+        "sensor_021": 3073.5,
+        "sensor_100": 10.25,
+        "sensor_093": 28.02
+      }
+    },
+    {
+      "id": "PROD_146",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": -1.715,
+      "pca_y": 0.025,
+      "sensors": {
+        "sensor_111": 21.76,
+        "sensor_058": 171.16,
+        "sensor_059": 18.38,
+        "sensor_008": -7150.25,
+        "sensor_062": 0.63,
+        "sensor_178": 6.19,
+        "sensor_165": 63.13,
+        "sensor_021": 2998.0,
+        "sensor_100": 9.63,
+        "sensor_093": 54.24
+      }
+    },
+    {
+      "id": "PROD_147",
+      "true_label": 1,
+      "prob": 0.3637,
+      "pred_label": 1,
+      "pca_x": -0.853,
+      "pca_y": -1.362,
+      "sensors": {
+        "sensor_111": 8.1,
+        "sensor_058": 33.84,
+        "sensor_059": 20.62,
+        "sensor_008": -6383.75,
+        "sensor_062": 3.35,
+        "sensor_178": 10.43,
+        "sensor_165": 67.47,
+        "sensor_021": 3064.25,
+        "sensor_100": 12.49,
+        "sensor_093": 28.91
+      }
+    },
+    {
+      "id": "PROD_148",
+      "true_label": 0,
+      "prob": 0.937,
+      "pred_label": 1,
+      "pca_x": -0.709,
+      "pca_y": -0.721,
+      "sensors": {
+        "sensor_111": 13.37,
+        "sensor_058": 59.48,
+        "sensor_059": 6.4,
+        "sensor_008": -5613.5,
+        "sensor_062": 2.34,
+        "sensor_178": 8.65,
+        "sensor_165": 69.46,
+        "sensor_021": 2732.75,
+        "sensor_100": 21.09,
+        "sensor_093": 46.64
+      }
+    },
+    {
+      "id": "PROD_149",
+      "true_label": 0,
+      "prob": 0.0681,
+      "pred_label": 0,
+      "pca_x": -1.302,
+      "pca_y": -1.138,
+      "sensors": {
+        "sensor_111": 1.03,
+        "sensor_058": 40.16,
+        "sensor_059": 9.31,
+        "sensor_008": -4971.75,
+        "sensor_062": 4.9,
+        "sensor_178": 9.24,
+        "sensor_165": 70.01,
+        "sensor_021": 2557.0,
+        "sensor_100": 96.96,
+        "sensor_093": 57.91
+      }
+    },
+    {
+      "id": "PROD_150",
+      "true_label": 0,
+      "prob": 0.0314,
+      "pred_label": 0,
+      "pca_x": -0.794,
+      "pca_y": -0.734,
+      "sensors": {
+        "sensor_111": -5.96,
+        "sensor_058": 34.31,
+        "sensor_059": 11.05,
+        "sensor_008": -5501.0,
+        "sensor_062": 4.27,
+        "sensor_178": 9.9,
+        "sensor_165": 74.78,
+        "sensor_021": 2551.75,
+        "sensor_100": 24.95,
+        "sensor_093": 69.66
+      }
+    },
+    {
+      "id": "PROD_151",
+      "true_label": 0,
+      "prob": 0.0593,
+      "pred_label": 0,
+      "pca_x": -0.38,
+      "pca_y": -0.977,
+      "sensors": {
+        "sensor_111": 7.24,
+        "sensor_058": 87.25,
+        "sensor_059": 4.28,
+        "sensor_008": -5551.75,
+        "sensor_062": 2.42,
+        "sensor_178": 10.26,
+        "sensor_165": 68.47,
+        "sensor_021": 2663.5,
+        "sensor_100": 10.13,
+        "sensor_093": 25.7
+      }
+    },
+    {
+      "id": "PROD_152",
+      "true_label": 0,
+      "prob": 0.0972,
+      "pred_label": 0,
+      "pca_x": -0.381,
+      "pca_y": -0.883,
+      "sensors": {
+        "sensor_111": 5.21,
+        "sensor_058": 37.35,
+        "sensor_059": 38.84,
+        "sensor_008": -5466.75,
+        "sensor_062": 5.7,
+        "sensor_178": 13.37,
+        "sensor_165": 73.61,
+        "sensor_021": 2605.5,
+        "sensor_100": 17.66,
+        "sensor_093": 24.75
+      }
+    },
+    {
+      "id": "PROD_153",
+      "true_label": 0,
+      "prob": 0.0594,
+      "pred_label": 0,
+      "pca_x": -0.913,
+      "pca_y": -2.963,
+      "sensors": {
+        "sensor_111": 2.57,
+        "sensor_058": 23.26,
+        "sensor_059": 9.83,
+        "sensor_008": -5440.5,
+        "sensor_062": 4.5,
+        "sensor_178": 10.24,
+        "sensor_165": 67.28,
+        "sensor_021": 2664.0,
+        "sensor_100": 55.1,
+        "sensor_093": 52.72
+      }
+    },
+    {
+      "id": "PROD_154",
+      "true_label": 1,
+      "prob": 0.718,
+      "pred_label": 1,
+      "pca_x": 0.29,
+      "pca_y": -1.093,
+      "sensors": {
+        "sensor_111": 23.96,
+        "sensor_058": 49.07,
+        "sensor_059": 14.04,
+        "sensor_008": -5394.0,
+        "sensor_062": 2.58,
+        "sensor_178": 6.51,
+        "sensor_165": 68.36,
+        "sensor_021": 2621.75,
+        "sensor_100": 25.5,
+        "sensor_093": 35.92
+      }
+    },
+    {
+      "id": "PROD_155",
+      "true_label": 1,
+      "prob": 0.7427,
+      "pred_label": 1,
+      "pca_x": -0.752,
+      "pca_y": -0.469,
+      "sensors": {
+        "sensor_111": -1.15,
+        "sensor_058": 33.8,
+        "sensor_059": 6.27,
+        "sensor_008": -5475.5,
+        "sensor_062": 2.84,
+        "sensor_178": 8.5,
+        "sensor_165": 70.54,
+        "sensor_021": 2553.0,
+        "sensor_100": 14.52,
+        "sensor_093": 52.1
+      }
+    },
+    {
+      "id": "PROD_156",
+      "true_label": 1,
+      "prob": 0.6802,
+      "pred_label": 1,
+      "pca_x": 0.802,
+      "pca_y": 0.897,
+      "sensors": {
+        "sensor_111": 25.04,
+        "sensor_058": 96.97,
+        "sensor_059": 20.79,
+        "sensor_008": -5300.25,
+        "sensor_062": 1.55,
+        "sensor_178": 7.36,
+        "sensor_165": 69.07,
+        "sensor_021": 2631.0,
+        "sensor_100": 17.09,
+        "sensor_093": 29.85
+      }
+    },
+    {
+      "id": "PROD_157",
+      "true_label": 0,
+      "prob": 0.0687,
+      "pred_label": 0,
+      "pca_x": -0.271,
+      "pca_y": -2.062,
+      "sensors": {
+        "sensor_111": -0.44,
+        "sensor_058": 55.03,
+        "sensor_059": 12.92,
+        "sensor_008": -5125.75,
+        "sensor_062": 1.9,
+        "sensor_178": 10.39,
+        "sensor_165": 72.29,
+        "sensor_021": 2624.25,
+        "sensor_100": 96.96,
+        "sensor_093": 17.83
+      }
+    },
+    {
+      "id": "PROD_158",
+      "true_label": 0,
+      "prob": 0.1017,
+      "pred_label": 0,
+      "pca_x": -1.778,
+      "pca_y": 0.032,
+      "sensors": {
+        "sensor_111": -4.81,
+        "sensor_058": 68.06,
+        "sensor_059": 11.75,
+        "sensor_008": -5989.75,
+        "sensor_062": 2.76,
+        "sensor_178": 11.26,
+        "sensor_165": 69.02,
+        "sensor_021": 3062.75,
+        "sensor_100": 12.57,
+        "sensor_093": 46.81
+      }
+    },
+    {
+      "id": "PROD_159",
+      "true_label": 1,
+      "prob": 0.8162,
+      "pred_label": 1,
+      "pca_x": 1.151,
+      "pca_y": -1.418,
+      "sensors": {
+        "sensor_111": 8.42,
+        "sensor_058": 132.53,
+        "sensor_059": 8.35,
+        "sensor_008": -5505.5,
+        "sensor_062": 2.09,
+        "sensor_178": 6.05,
+        "sensor_165": 67.22,
+        "sensor_021": 2718.5,
+        "sensor_100": 9.56,
+        "sensor_093": 33.61
+      }
+    },
+    {
+      "id": "PROD_160",
+      "true_label": 0,
+      "prob": 0.058,
+      "pred_label": 0,
+      "pca_x": -1.105,
+      "pca_y": -1.019,
+      "sensors": {
+        "sensor_111": -0.45,
+        "sensor_058": 67.29,
+        "sensor_059": 21.5,
+        "sensor_008": -6308.75,
+        "sensor_062": 4.3,
+        "sensor_178": 12.44,
+        "sensor_165": 67.74,
+        "sensor_021": 3079.5,
+        "sensor_100": 11.17,
+        "sensor_093": 32.63
+      }
+    },
+    {
+      "id": "PROD_161",
+      "true_label": 0,
+      "prob": 0.2817,
+      "pred_label": 0,
+      "pca_x": 0.663,
+      "pca_y": 0.899,
+      "sensors": {
+        "sensor_111": 22.47,
+        "sensor_058": 349.21,
+        "sensor_059": 14.15,
+        "sensor_008": -5469.25,
+        "sensor_062": 3.49,
+        "sensor_178": 13.34,
+        "sensor_165": 65.08,
+        "sensor_021": 2685.5,
+        "sensor_100": 13.62,
+        "sensor_093": 25.76
+      }
+    },
+    {
+      "id": "PROD_162",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -0.44,
+      "pca_y": -0.038,
+      "sensors": {
+        "sensor_111": 2.47,
+        "sensor_058": 53.09,
+        "sensor_059": 16.76,
+        "sensor_008": -5597.5,
+        "sensor_062": 0.72,
+        "sensor_178": 10.63,
+        "sensor_165": 69.52,
+        "sensor_021": 2673.5,
+        "sensor_100": 6.26,
+        "sensor_093": 48.95
+      }
+    },
+    {
+      "id": "PROD_163",
+      "true_label": 0,
+      "prob": 0.1247,
+      "pred_label": 0,
+      "pca_x": 1.077,
+      "pca_y": -0.982,
+      "sensors": {
+        "sensor_111": 3.98,
+        "sensor_058": 45.5,
+        "sensor_059": 23.34,
+        "sensor_008": -5496.75,
+        "sensor_062": 3.27,
+        "sensor_178": 9.07,
+        "sensor_165": 66.81,
+        "sensor_021": 2515.5,
+        "sensor_100": 17.73,
+        "sensor_093": 32.59
+      }
+    },
+    {
+      "id": "PROD_164",
+      "true_label": 0,
+      "prob": 0.0384,
+      "pred_label": 0,
+      "pca_x": 0.101,
+      "pca_y": -1.259,
+      "sensors": {
+        "sensor_111": -4.66,
+        "sensor_058": 30.8,
+        "sensor_059": 9.17,
+        "sensor_008": -5358.5,
+        "sensor_062": 1.26,
+        "sensor_178": 9.09,
+        "sensor_165": 74.49,
+        "sensor_021": 2714.5,
+        "sensor_100": 8.69,
+        "sensor_093": 33.92
+      }
+    },
+    {
+      "id": "PROD_165",
+      "true_label": 0,
+      "prob": 0.1108,
+      "pred_label": 0,
+      "pca_x": 0.15,
+      "pca_y": -0.714,
+      "sensors": {
+        "sensor_111": -2.06,
+        "sensor_058": 41.87,
+        "sensor_059": 5.54,
+        "sensor_008": -5640.0,
+        "sensor_062": 2.74,
+        "sensor_178": 9.48,
+        "sensor_165": 66.19,
+        "sensor_021": 2635.25,
+        "sensor_100": 18.12,
+        "sensor_093": 36.22
+      }
+    },
+    {
+      "id": "PROD_166",
+      "true_label": 1,
+      "prob": 0.1207,
+      "pred_label": 0,
+      "pca_x": -2.927,
+      "pca_y": -0.592,
+      "sensors": {
+        "sensor_111": 18.32,
+        "sensor_058": 66.52,
+        "sensor_059": 9.97,
+        "sensor_008": -5507.5,
+        "sensor_062": 1.48,
+        "sensor_178": 11.41,
+        "sensor_165": 68.0,
+        "sensor_021": 2658.25,
+        "sensor_100": 17.05,
+        "sensor_093": 28.67
+      }
+    },
+    {
+      "id": "PROD_167",
+      "true_label": 0,
+      "prob": 0.1526,
+      "pred_label": 0,
+      "pca_x": 0.258,
+      "pca_y": -0.948,
+      "sensors": {
+        "sensor_111": -1.85,
+        "sensor_058": 28.31,
+        "sensor_059": 6.01,
+        "sensor_008": -6349.25,
+        "sensor_062": 7.24,
+        "sensor_178": 8.46,
+        "sensor_165": 73.86,
+        "sensor_021": 2261.5,
+        "sensor_100": 17.48,
+        "sensor_093": 53.7
+      }
+    },
+    {
+      "id": "PROD_168",
+      "true_label": 1,
+      "prob": 0.5902,
+      "pred_label": 1,
+      "pca_x": -1.96,
+      "pca_y": 0.085,
+      "sensors": {
+        "sensor_111": 0.14,
+        "sensor_058": 28.5,
+        "sensor_059": 23.74,
+        "sensor_008": -5129.25,
+        "sensor_062": 1.97,
+        "sensor_178": 10.24,
+        "sensor_165": 71.88,
+        "sensor_021": 2442.75,
+        "sensor_100": 13.5,
+        "sensor_093": 36.06
+      }
+    },
+    {
+      "id": "PROD_169",
+      "true_label": 0,
+      "prob": 0.0589,
+      "pred_label": 0,
+      "pca_x": 0.221,
+      "pca_y": -1.395,
+      "sensors": {
+        "sensor_111": 7.07,
+        "sensor_058": 34.71,
+        "sensor_059": 22.36,
+        "sensor_008": -6626.5,
+        "sensor_062": 1.41,
+        "sensor_178": 6.28,
+        "sensor_165": 70.64,
+        "sensor_021": 2835.25,
+        "sensor_100": 13.5,
+        "sensor_093": 58.18
+      }
+    },
+    {
+      "id": "PROD_170",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": -1.096,
+      "pca_y": -1.125,
+      "sensors": {
+        "sensor_111": 17.17,
+        "sensor_058": 46.7,
+        "sensor_059": 18.29,
+        "sensor_008": -6393.25,
+        "sensor_062": 3.69,
+        "sensor_178": 9.2,
+        "sensor_165": 67.9,
+        "sensor_021": 3051.0,
+        "sensor_100": 10.45,
+        "sensor_093": 53.3
+      }
+    },
+    {
+      "id": "PROD_171",
+      "true_label": 1,
+      "prob": 0.8593,
+      "pred_label": 1,
+      "pca_x": -0.232,
+      "pca_y": -0.793,
+      "sensors": {
+        "sensor_111": 12.31,
+        "sensor_058": 123.54,
+        "sensor_059": 15.26,
+        "sensor_008": -5345.0,
+        "sensor_062": 2.85,
+        "sensor_178": 5.17,
+        "sensor_165": 64.13,
+        "sensor_021": 2614.0,
+        "sensor_100": 16.73,
+        "sensor_093": 53.94
+      }
+    },
+    {
+      "id": "PROD_172",
+      "true_label": 0,
+      "prob": 0.2324,
+      "pred_label": 0,
+      "pca_x": 1.617,
+      "pca_y": 0.293,
+      "sensors": {
+        "sensor_111": 5.07,
+        "sensor_058": 43.95,
+        "sensor_059": 8.2,
+        "sensor_008": -5138.5,
+        "sensor_062": 1.58,
+        "sensor_178": 10.85,
+        "sensor_165": 67.44,
+        "sensor_021": 2474.5,
+        "sensor_100": 14.53,
+        "sensor_093": 48.47
+      }
+    },
+    {
+      "id": "PROD_173",
+      "true_label": 1,
+      "prob": 0.5873,
+      "pred_label": 1,
+      "pca_x": -1.156,
+      "pca_y": -2.134,
+      "sensors": {
+        "sensor_111": -5.72,
+        "sensor_058": 49.03,
+        "sensor_059": 16.67,
+        "sensor_008": -5282.75,
+        "sensor_062": 1.82,
+        "sensor_178": 11.08,
+        "sensor_165": 71.23,
+        "sensor_021": 2627.5,
+        "sensor_100": 11.3,
+        "sensor_093": 50.87
+      }
+    },
+    {
+      "id": "PROD_174",
+      "true_label": 1,
+      "prob": 0.6266,
+      "pred_label": 1,
+      "pca_x": 0.644,
+      "pca_y": 1.21,
+      "sensors": {
+        "sensor_111": 18.58,
+        "sensor_058": 65.2,
+        "sensor_059": 6.63,
+        "sensor_008": -5432.75,
+        "sensor_062": 2.36,
+        "sensor_178": 5.72,
+        "sensor_165": 60.27,
+        "sensor_021": 2579.75,
+        "sensor_100": 12.88,
+        "sensor_093": 35.92
+      }
+    },
+    {
+      "id": "PROD_175",
+      "true_label": 0,
+      "prob": 0.1023,
+      "pred_label": 0,
+      "pca_x": 0.483,
+      "pca_y": 0.317,
+      "sensors": {
+        "sensor_111": -2.67,
+        "sensor_058": 65.9,
+        "sensor_059": 15.39,
+        "sensor_008": -5280.25,
+        "sensor_062": 3.68,
+        "sensor_178": 11.79,
+        "sensor_165": 66.9,
+        "sensor_021": 2644.0,
+        "sensor_100": 13.98,
+        "sensor_093": 24.79
+      }
+    },
+    {
+      "id": "PROD_176",
+      "true_label": 0,
+      "prob": 0.0716,
+      "pred_label": 0,
+      "pca_x": 0.16,
+      "pca_y": -1.75,
+      "sensors": {
+        "sensor_111": -2.31,
+        "sensor_058": 61.01,
+        "sensor_059": 18.4,
+        "sensor_008": -5300.5,
+        "sensor_062": 3.95,
+        "sensor_178": 6.57,
+        "sensor_165": 74.47,
+        "sensor_021": 2602.75,
+        "sensor_100": 8.76,
+        "sensor_093": 49.18
+      }
+    },
+    {
+      "id": "PROD_177",
+      "true_label": 0,
+      "prob": 0.2144,
+      "pred_label": 0,
+      "pca_x": -0.805,
+      "pca_y": 1.432,
+      "sensors": {
+        "sensor_111": 17.55,
+        "sensor_058": 78.71,
+        "sensor_059": 19.96,
+        "sensor_008": -6010.25,
+        "sensor_062": 3.11,
+        "sensor_178": 7.2,
+        "sensor_165": 66.89,
+        "sensor_021": 2805.75,
+        "sensor_100": 16.69,
+        "sensor_093": 41.22
+      }
+    },
+    {
+      "id": "PROD_178",
+      "true_label": 1,
+      "prob": 0.7785,
+      "pred_label": 1,
+      "pca_x": 0.822,
+      "pca_y": -1.725,
+      "sensors": {
+        "sensor_111": 11.29,
+        "sensor_058": 39.51,
+        "sensor_059": 19.3,
+        "sensor_008": -5343.0,
+        "sensor_062": 1.31,
+        "sensor_178": 7.31,
+        "sensor_165": 67.42,
+        "sensor_021": 2678.75,
+        "sensor_100": 10.59,
+        "sensor_093": 42.03
+      }
+    },
+    {
+      "id": "PROD_179",
+      "true_label": 0,
+      "prob": 0.096,
+      "pred_label": 0,
+      "pca_x": 1.672,
+      "pca_y": -1.975,
+      "sensors": {
+        "sensor_111": -1.51,
+        "sensor_058": 67.9,
+        "sensor_059": 19.77,
+        "sensor_008": -6225.75,
+        "sensor_062": 4.54,
+        "sensor_178": 9.93,
+        "sensor_165": 68.98,
+        "sensor_021": 3096.25,
+        "sensor_100": 16.35,
+        "sensor_093": 41.49
+      }
+    },
+    {
+      "id": "PROD_180",
+      "true_label": 0,
+      "prob": 0.0104,
+      "pred_label": 0,
+      "pca_x": -0.05,
+      "pca_y": 0.141,
+      "sensors": {
+        "sensor_111": -1.24,
+        "sensor_058": 35.27,
+        "sensor_059": 17.42,
+        "sensor_008": -6471.25,
+        "sensor_062": 3.7,
+        "sensor_178": 11.44,
+        "sensor_165": 65.7,
+        "sensor_021": 2985.25,
+        "sensor_100": 9.38,
+        "sensor_093": 39.45
+      }
+    },
+    {
+      "id": "PROD_181",
+      "true_label": 1,
+      "prob": 0.7783,
+      "pred_label": 1,
+      "pca_x": 62.323,
+      "pca_y": 2.409,
+      "sensors": {
+        "sensor_111": 53.68,
+        "sensor_058": 217.14,
+        "sensor_059": 20.86,
+        "sensor_008": -6405.75,
+        "sensor_062": 2.46,
+        "sensor_178": 10.72,
+        "sensor_165": 68.68,
+        "sensor_021": 3111.25,
+        "sensor_100": 22.2,
+        "sensor_093": 27.43
+      }
+    },
+    {
+      "id": "PROD_182",
+      "true_label": 1,
+      "prob": 0.5111,
+      "pred_label": 1,
+      "pca_x": -1.57,
+      "pca_y": -1.903,
+      "sensors": {
+        "sensor_111": 6.56,
+        "sensor_058": 80.64,
+        "sensor_059": 13.8,
+        "sensor_008": -5370.25,
+        "sensor_062": 1.97,
+        "sensor_178": 6.64,
+        "sensor_165": 72.49,
+        "sensor_021": 2601.75,
+        "sensor_100": 13.28,
+        "sensor_093": 46.25
+      }
+    },
+    {
+      "id": "PROD_183",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -0.826,
+      "pca_y": 0.964,
+      "sensors": {
+        "sensor_111": 13.11,
+        "sensor_058": 60.66,
+        "sensor_059": 26.93,
+        "sensor_008": -5217.5,
+        "sensor_062": 2.8,
+        "sensor_178": 11.31,
+        "sensor_165": 66.17,
+        "sensor_021": 3015.25,
+        "sensor_100": 19.4,
+        "sensor_093": 39.33
+      }
+    },
+    {
+      "id": "PROD_184",
+      "true_label": 0,
+      "prob": 0.0825,
+      "pred_label": 0,
+      "pca_x": 1.314,
+      "pca_y": -0.22,
+      "sensors": {
+        "sensor_111": -3.93,
+        "sensor_058": 53.5,
+        "sensor_059": 15.65,
+        "sensor_008": -5241.0,
+        "sensor_062": 5.26,
+        "sensor_178": 10.34,
+        "sensor_165": 69.96,
+        "sensor_021": 2434.5,
+        "sensor_100": 12.63,
+        "sensor_093": 36.76
+      }
+    },
+    {
+      "id": "PROD_185",
+      "true_label": 0,
+      "prob": 0.3419,
+      "pred_label": 0,
+      "pca_x": -1.032,
+      "pca_y": -2.027,
+      "sensors": {
+        "sensor_111": 22.18,
+        "sensor_058": 64.8,
+        "sensor_059": 12.23,
+        "sensor_008": -6528.5,
+        "sensor_062": 6.54,
+        "sensor_178": 7.08,
+        "sensor_165": 68.2,
+        "sensor_021": 3067.0,
+        "sensor_100": 18.45,
+        "sensor_093": 16.33
+      }
+    },
+    {
+      "id": "PROD_186",
+      "true_label": 0,
+      "prob": 0.023,
+      "pred_label": 0,
+      "pca_x": -1.49,
+      "pca_y": -0.926,
+      "sensors": {
+        "sensor_111": 2.67,
+        "sensor_058": 36.53,
+        "sensor_059": 17.61,
+        "sensor_008": -5604.5,
+        "sensor_062": 0.77,
+        "sensor_178": 8.7,
+        "sensor_165": 66.01,
+        "sensor_021": 2793.5,
+        "sensor_100": 15.23,
+        "sensor_093": 33.94
+      }
+    },
+    {
+      "id": "PROD_187",
+      "true_label": 0,
+      "prob": 0.1017,
+      "pred_label": 0,
+      "pca_x": 0.342,
+      "pca_y": -0.991,
+      "sensors": {
+        "sensor_111": -8.4,
+        "sensor_058": 59.21,
+        "sensor_059": 31.6,
+        "sensor_008": -5474.25,
+        "sensor_062": 3.76,
+        "sensor_178": 10.21,
+        "sensor_165": 59.98,
+        "sensor_021": 2997.0,
+        "sensor_100": 11.3,
+        "sensor_093": 11.34
+      }
+    },
+    {
+      "id": "PROD_188",
+      "true_label": 0,
+      "prob": 0.0106,
+      "pred_label": 0,
+      "pca_x": 0.61,
+      "pca_y": -1.658,
+      "sensors": {
+        "sensor_111": 0.19,
+        "sensor_058": 42.61,
+        "sensor_059": 24.14,
+        "sensor_008": -6466.0,
+        "sensor_062": 3.53,
+        "sensor_178": 10.69,
+        "sensor_165": 69.31,
+        "sensor_021": 3069.25,
+        "sensor_100": 7.77,
+        "sensor_093": 41.68
+      }
+    },
+    {
+      "id": "PROD_189",
+      "true_label": 0,
+      "prob": 0.0819,
+      "pred_label": 0,
+      "pca_x": -0.892,
+      "pca_y": -2.242,
+      "sensors": {
+        "sensor_111": 0.91,
+        "sensor_058": 54.7,
+        "sensor_059": 14.91,
+        "sensor_008": -6260.75,
+        "sensor_062": 4.2,
+        "sensor_178": 3.16,
+        "sensor_165": 69.02,
+        "sensor_021": 3032.25,
+        "sensor_100": 7.51,
+        "sensor_093": 26.38
+      }
+    },
+    {
+      "id": "PROD_190",
+      "true_label": 0,
+      "prob": 0.0446,
+      "pred_label": 0,
+      "pca_x": 2.036,
+      "pca_y": -1.968,
+      "sensors": {
+        "sensor_111": -3.91,
+        "sensor_058": 55.81,
+        "sensor_059": 4.22,
+        "sensor_008": -6247.0,
+        "sensor_062": 5.31,
+        "sensor_178": 10.22,
+        "sensor_165": 72.76,
+        "sensor_021": 2273.0,
+        "sensor_100": 13.05,
+        "sensor_093": 52.67
+      }
+    },
+    {
+      "id": "PROD_191",
+      "true_label": 0,
+      "prob": 0.0273,
+      "pred_label": 0,
+      "pca_x": -1.801,
+      "pca_y": 0.489,
+      "sensors": {
+        "sensor_111": -2.44,
+        "sensor_058": 37.68,
+        "sensor_059": 29.63,
+        "sensor_008": -5056.25,
+        "sensor_062": 3.21,
+        "sensor_178": 9.82,
+        "sensor_165": 71.04,
+        "sensor_021": 2565.25,
+        "sensor_100": 17.73,
+        "sensor_093": 41.37
+      }
+    },
+    {
+      "id": "PROD_192",
+      "true_label": 0,
+      "prob": 0.0594,
+      "pred_label": 0,
+      "pca_x": -0.261,
+      "pca_y": -2.383,
+      "sensors": {
+        "sensor_111": -3.29,
+        "sensor_058": 59.93,
+        "sensor_059": 6.56,
+        "sensor_008": -5399.25,
+        "sensor_062": 2.47,
+        "sensor_178": 7.79,
+        "sensor_165": 69.68,
+        "sensor_021": 2654.25,
+        "sensor_100": 8.69,
+        "sensor_093": 57.91
+      }
+    },
+    {
+      "id": "PROD_193",
+      "true_label": 1,
+      "prob": 0.1588,
+      "pred_label": 0,
+      "pca_x": 0.475,
+      "pca_y": -0.166,
+      "sensors": {
+        "sensor_111": -0.03,
+        "sensor_058": 46.88,
+        "sensor_059": 13.06,
+        "sensor_008": -5390.0,
+        "sensor_062": 2.71,
+        "sensor_178": 10.4,
+        "sensor_165": 70.26,
+        "sensor_021": 2596.25,
+        "sensor_100": 13.18,
+        "sensor_093": 44.58
+      }
+    },
+    {
+      "id": "PROD_194",
+      "true_label": 0,
+      "prob": 0.0163,
+      "pred_label": 0,
+      "pca_x": -0.581,
+      "pca_y": 0.06,
+      "sensors": {
+        "sensor_111": -5.93,
+        "sensor_058": 34.23,
+        "sensor_059": 23.2,
+        "sensor_008": -5612.25,
+        "sensor_062": 4.64,
+        "sensor_178": 11.73,
+        "sensor_165": 68.17,
+        "sensor_021": 2586.5,
+        "sensor_100": 13.16,
+        "sensor_093": 47.57
+      }
+    },
+    {
+      "id": "PROD_195",
+      "true_label": 0,
+      "prob": 0.0463,
+      "pred_label": 0,
+      "pca_x": -0.711,
+      "pca_y": 0.248,
+      "sensors": {
+        "sensor_111": -10.6,
+        "sensor_058": 56.5,
+        "sensor_059": 21.6,
+        "sensor_008": -6402.75,
+        "sensor_062": 2.14,
+        "sensor_178": 14.29,
+        "sensor_165": 65.5,
+        "sensor_021": 3036.75,
+        "sensor_100": 10.12,
+        "sensor_093": 41.54
+      }
+    },
+    {
+      "id": "PROD_196",
+      "true_label": 0,
+      "prob": 0.1089,
+      "pred_label": 0,
+      "pca_x": 2.367,
+      "pca_y": -2.36,
+      "sensors": {
+        "sensor_111": 4.08,
+        "sensor_058": 31.72,
+        "sensor_059": 16.65,
+        "sensor_008": -6029.0,
+        "sensor_062": 1.2,
+        "sensor_178": 7.29,
+        "sensor_165": 75.87,
+        "sensor_021": 2709.0,
+        "sensor_100": 14.53,
+        "sensor_093": 23.8
+      }
+    },
+    {
+      "id": "PROD_197",
+      "true_label": 1,
+      "prob": 0.101,
+      "pred_label": 0,
+      "pca_x": 0.154,
+      "pca_y": -1.609,
+      "sensors": {
+        "sensor_111": 1.0,
+        "sensor_058": 38.92,
+        "sensor_059": 3.99,
+        "sensor_008": -5477.0,
+        "sensor_062": 4.32,
+        "sensor_178": 9.16,
+        "sensor_165": 72.23,
+        "sensor_021": 2657.75,
+        "sensor_100": 16.27,
+        "sensor_093": 18.05
+      }
+    },
+    {
+      "id": "PROD_198",
+      "true_label": 0,
+      "prob": 0.1018,
+      "pred_label": 0,
+      "pca_x": -0.462,
+      "pca_y": -0.837,
+      "sensors": {
+        "sensor_111": -1.6,
+        "sensor_058": 72.08,
+        "sensor_059": 15.44,
+        "sensor_008": -5159.75,
+        "sensor_062": 2.81,
+        "sensor_178": 6.84,
+        "sensor_165": 71.59,
+        "sensor_021": 2609.75,
+        "sensor_100": 10.5,
+        "sensor_093": 32.26
+      }
+    },
+    {
+      "id": "PROD_199",
+      "true_label": 0,
+      "prob": 0.0698,
+      "pred_label": 0,
+      "pca_x": -1.268,
+      "pca_y": -0.984,
+      "sensors": {
+        "sensor_111": 1.3,
+        "sensor_058": 19.67,
+        "sensor_059": 10.58,
+        "sensor_008": -5143.5,
+        "sensor_062": 2.94,
+        "sensor_178": 8.81,
+        "sensor_165": 75.09,
+        "sensor_021": 2626.5,
+        "sensor_100": 10.83,
+        "sensor_093": 51.71
+      }
+    },
+    {
+      "id": "PROD_200",
+      "true_label": 0,
+      "prob": 0.3319,
+      "pred_label": 0,
+      "pca_x": 1.447,
+      "pca_y": -3.79,
+      "sensors": {
+        "sensor_111": 4.73,
+        "sensor_058": 50.87,
+        "sensor_059": 17.15,
+        "sensor_008": -5464.5,
+        "sensor_062": 2.85,
+        "sensor_178": 9.57,
+        "sensor_165": 69.11,
+        "sensor_021": 2659.5,
+        "sensor_100": 12.52,
+        "sensor_093": 37.49
+      }
+    }
+  ],
+  "threshold_curve": [
+    {
+      "threshold": 0.05,
+      "tp": 60,
+      "fp": 121,
+      "fn": 0,
+      "tn": 19,
+      "recall": 1.0,
+      "precision": 0.331,
+      "f1": 0.498,
+      "accuracy": 0.395
+    },
+    {
+      "threshold": 0.1,
+      "tp": 57,
+      "fp": 88,
+      "fn": 3,
+      "tn": 52,
+      "recall": 0.95,
+      "precision": 0.393,
+      "f1": 0.556,
+      "accuracy": 0.545
+    },
+    {
+      "threshold": 0.15,
+      "tp": 55,
+      "fp": 48,
+      "fn": 5,
+      "tn": 92,
+      "recall": 0.917,
+      "precision": 0.534,
+      "f1": 0.675,
+      "accuracy": 0.735
+    },
+    {
+      "threshold": 0.2,
+      "tp": 53,
+      "fp": 38,
+      "fn": 7,
+      "tn": 102,
+      "recall": 0.883,
+      "precision": 0.582,
+      "f1": 0.702,
+      "accuracy": 0.775
+    },
+    {
+      "threshold": 0.25,
+      "tp": 52,
+      "fp": 26,
+      "fn": 8,
+      "tn": 114,
+      "recall": 0.867,
+      "precision": 0.667,
+      "f1": 0.754,
+      "accuracy": 0.83
+    },
+    {
+      "threshold": 0.3,
+      "tp": 52,
+      "fp": 23,
+      "fn": 8,
+      "tn": 117,
+      "recall": 0.867,
+      "precision": 0.693,
+      "f1": 0.77,
+      "accuracy": 0.845
+    },
+    {
+      "threshold": 0.35,
+      "tp": 51,
+      "fp": 16,
+      "fn": 9,
+      "tn": 124,
+      "recall": 0.85,
+      "precision": 0.761,
+      "f1": 0.803,
+      "accuracy": 0.875
+    },
+    {
+      "threshold": 0.4,
+      "tp": 48,
+      "fp": 13,
+      "fn": 12,
+      "tn": 127,
+      "recall": 0.8,
+      "precision": 0.787,
+      "f1": 0.793,
+      "accuracy": 0.875
+    },
+    {
+      "threshold": 0.45,
+      "tp": 48,
+      "fp": 10,
+      "fn": 12,
+      "tn": 130,
+      "recall": 0.8,
+      "precision": 0.828,
+      "f1": 0.814,
+      "accuracy": 0.89
+    },
+    {
+      "threshold": 0.5,
+      "tp": 48,
+      "fp": 9,
+      "fn": 12,
+      "tn": 131,
+      "recall": 0.8,
+      "precision": 0.842,
+      "f1": 0.821,
+      "accuracy": 0.895
+    },
+    {
+      "threshold": 0.55,
+      "tp": 47,
+      "fp": 6,
+      "fn": 13,
+      "tn": 134,
+      "recall": 0.783,
+      "precision": 0.887,
+      "f1": 0.832,
+      "accuracy": 0.905
+    },
+    {
+      "threshold": 0.6,
+      "tp": 43,
+      "fp": 6,
+      "fn": 17,
+      "tn": 134,
+      "recall": 0.717,
+      "precision": 0.878,
+      "f1": 0.789,
+      "accuracy": 0.885
+    },
+    {
+      "threshold": 0.65,
+      "tp": 40,
+      "fp": 5,
+      "fn": 20,
+      "tn": 135,
+      "recall": 0.667,
+      "precision": 0.889,
+      "f1": 0.762,
+      "accuracy": 0.875
+    },
+    {
+      "threshold": 0.7,
+      "tp": 37,
+      "fp": 2,
+      "fn": 23,
+      "tn": 138,
+      "recall": 0.617,
+      "precision": 0.949,
+      "f1": 0.747,
+      "accuracy": 0.875
+    },
+    {
+      "threshold": 0.75,
+      "tp": 31,
+      "fp": 1,
+      "fn": 29,
+      "tn": 139,
+      "recall": 0.517,
+      "precision": 0.969,
+      "f1": 0.674,
+      "accuracy": 0.85
+    },
+    {
+      "threshold": 0.8,
+      "tp": 7,
+      "fp": 1,
+      "fn": 53,
+      "tn": 139,
+      "recall": 0.117,
+      "precision": 0.875,
+      "f1": 0.206,
+      "accuracy": 0.73
+    },
+    {
+      "threshold": 0.85,
+      "tp": 5,
+      "fp": 1,
+      "fn": 55,
+      "tn": 139,
+      "recall": 0.083,
+      "precision": 0.833,
+      "f1": 0.152,
+      "accuracy": 0.72
+    },
+    {
+      "threshold": 0.9,
+      "tp": 3,
+      "fp": 1,
+      "fn": 57,
+      "tn": 139,
+      "recall": 0.05,
+      "precision": 0.75,
+      "f1": 0.094,
+      "accuracy": 0.71
+    },
+    {
+      "threshold": 0.95,
+      "tp": 0,
+      "fp": 0,
+      "fn": 60,
+      "tn": 140,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "accuracy": 0.7
+    }
+  ],
+  "lifecycle_summary": {
+    "step_1": {
+      "step_name": "Business Understanding",
+      "objective": "Predict whether a semiconductor wafer/product will fail quality inspection based on in-line manufacturing sensor readings.",
+      "problem_type": "Binary Classification (Supervised)",
+      "target_definition": "defect_status: 0 = Pass (Normal), 1 = Fail (Defective)",
+      "business_cost_matrix": {
+        "false_negative_cost": "$5,000 (Defective unit escapes to downstream assembly/customer)",
+        "false_positive_cost": "$150 (Flagged good unit sent for secondary automated re-testing)",
+        "key_metric": "Recall / PR-AUC (Cost-sensitive optimization to minimize False Negatives)"
+      },
+      "status": "COMPLETED"
+    },
+    "step_2": {
+      "step_name": "Data Collection",
+      "source": "UCI SECOM Semiconductor Manufacturing Process Telemetry",
+      "rows": 200,
+      "columns": 200,
+      "feature_channels": 198,
+      "target_column": "defect_status",
+      "status": "COMPLETED"
+    },
+    "step_3": {
+      "step_name": "Data Preparation",
+      "sample_count": 200,
+      "normal_units": 140,
+      "defective_units": 60,
+      "defect_rate_percentage": "30.0%",
+      "feature_count": 198,
+      "feature_type": "Continuous sensor telemetry (float64)",
+      "status": "COMPLETED"
+    },
+    "step_4": {
+      "step_name": "Data Cleaning",
+      "missing_values": 0,
+      "duplicate_rows": 0,
+      "outlier_cell_count": 432,
+      "cleaning_actions": [
+        "Verified 0 missing values across all 200 columns",
+        "Confirmed zero duplicated product records",
+        "Robust scaling applied to handle high-variance outlier sensors"
+      ],
+      "status": "COMPLETED"
+    },
+    "step_5": {
+      "step_name": "Exploratory Data Analysis",
+      "top_positive_correlated_sensors": {
+        "sensor_111": 0.3523,
+        "sensor_058": 0.251,
+        "sensor_059": 0.2436,
+        "sensor_008": 0.2369,
+        "sensor_062": 0.2343
+      },
+      "top_negative_correlated_sensors": {
+        "sensor_178": -0.2715,
+        "sensor_165": -0.2421,
+        "sensor_021": -0.1996,
+        "sensor_100": -0.1317,
+        "sensor_093": -0.1303
+      },
+      "pca_2d_explained_variance": [
+        0.1365,
+        0.0535
+      ],
+      "plot_saved": "lifecycle_outputs\\eda_pca_distribution.png",
+      "key_insight": "Defect products display distinct clustering in PC1-PC2 subspace; sensor_111 has highest positive correlation (0.352) with defect occurrence.",
+      "status": "COMPLETED"
+    },
+    "step_6": {
+      "step_name": "Feature Engineering",
+      "scaling_method": "StandardScaler (Zero mean, Unit variance)",
+      "selection_method": "ANOVA F-Value SelectKBest",
+      "features_retained": 35,
+      "top_selected_features": [
+        "sensor_007",
+        "sensor_008",
+        "sensor_009",
+        "sensor_012",
+        "sensor_016",
+        "sensor_018",
+        "sensor_021",
+        "sensor_024",
+        "sensor_031",
+        "sensor_058"
+      ],
+      "train_shape": [
+        160,
+        35
+      ],
+      "test_shape": [
+        40,
+        35
+      ],
+      "status": "COMPLETED"
+    },
+    "step_7": {
+      "step_name": "Model Building",
+      "cross_validation": "5-Fold Stratified CV",
+      "model_comparison": {
+        "Logistic Regression (L2)": {
+          "cv_accuracy": 0.8125,
+          "cv_recall": 0.72,
+          "cv_precision": 0.681,
+          "cv_f1": 0.6819,
+          "cv_roc_auc": 0.8346
+        },
+        "Support Vector Machine (RBF)": {
+          "cv_accuracy": 0.8063,
+          "cv_recall": 0.64,
+          "cv_precision": 0.7032,
+          "cv_f1": 0.6606,
+          "cv_roc_auc": 0.8563
+        },
+        "Random Forest": {
+          "cv_accuracy": 0.7812,
+          "cv_recall": 0.54,
+          "cv_precision": 0.6615,
+          "cv_f1": 0.5921,
+          "cv_roc_auc": 0.7849
+        },
+        "XGBoost Classifier": {
+          "cv_accuracy": 0.7312,
+          "cv_recall": 0.5378,
+          "cv_precision": 0.5451,
+          "cv_f1": 0.5315,
+          "cv_roc_auc": 0.7596
+        }
+      },
+      "status": "COMPLETED"
+    },
+    "step_8": {
+      "step_name": "Model Evaluation",
+      "test_set_results": {
+        "Logistic Regression (L2)": {
+          "accuracy": 0.7,
+          "precision": 0.5,
+          "recall": 0.4167,
+          "f1_score": 0.4545,
+          "roc_auc": 0.6161,
+          "confusion_matrix": [
+            [
+              23,
+              5
+            ],
+            [
+              7,
+              5
+            ]
+          ]
+        },
+        "Support Vector Machine (RBF)": {
+          "accuracy": 0.75,
+          "precision": 0.6,
+          "recall": 0.5,
+          "f1_score": 0.5455,
+          "roc_auc": 0.6548,
+          "confusion_matrix": [
+            [
+              24,
+              4
+            ],
+            [
+              6,
+              6
+            ]
+          ]
+        },
+        "Random Forest": {
+          "accuracy": 0.7,
+          "precision": 0.5,
+          "recall": 0.25,
+          "f1_score": 0.3333,
+          "roc_auc": 0.6369,
+          "confusion_matrix": [
+            [
+              25,
+              3
+            ],
+            [
+              9,
+              3
+            ]
+          ]
+        },
+        "XGBoost Classifier": {
+          "accuracy": 0.675,
+          "precision": 0.4,
+          "recall": 0.1667,
+          "f1_score": 0.2353,
+          "roc_auc": 0.5982,
+          "confusion_matrix": [
+            [
+              25,
+              3
+            ],
+            [
+              10,
+              2
+            ]
+          ]
+        }
+      },
+      "champion_model": "Support Vector Machine (RBF)",
+      "selection_rationale": "SVM (RBF Kernel) achieved the highest 5-Fold CV ROC-AUC (0.856), top test accuracy (75.0%), and highest defect recall (50.0%), significantly outperforming tree baselines on continuous sensor signals.",
+      "status": "COMPLETED"
+    },
+    "step_9": {
+      "step_name": "Testing & Tuning",
+      "test_samples_count": 40,
+      "optimal_threshold": 0.35,
+      "optimized_metrics": {
+        "recall": 0.5833,
+        "precision": 0.5385,
+        "f1_score": 0.56,
+        "confusion_matrix": [
+          [
+            22,
+            6
+          ],
+          [
+            5,
+            7
+          ]
+        ]
+      },
+      "threshold_curve_samples": [
+        {
+          "threshold": 0.2,
+          "recall": 0.583,
+          "precision": 0.333,
+          "f1": 0.424
+        },
+        {
+          "threshold": 0.25,
+          "recall": 0.583,
+          "precision": 0.412,
+          "f1": 0.483
+        },
+        {
+          "threshold": 0.3,
+          "recall": 0.583,
+          "precision": 0.438,
+          "f1": 0.5
+        },
+        {
+          "threshold": 0.35,
+          "recall": 0.583,
+          "precision": 0.538,
+          "f1": 0.56
+        },
+        {
+          "threshold": 0.4,
+          "recall": 0.417,
+          "precision": 0.556,
+          "f1": 0.476
+        },
+        {
+          "threshold": 0.45,
+          "recall": 0.417,
+          "precision": 0.625,
+          "f1": 0.5
+        },
+        {
+          "threshold": 0.5,
+          "recall": 0.417,
+          "precision": 0.625,
+          "f1": 0.5
+        },
+        {
+          "threshold": 0.55,
+          "recall": 0.417,
+          "precision": 0.625,
+          "f1": 0.5
+        },
+        {
+          "threshold": 0.6,
+          "recall": 0.333,
+          "precision": 0.571,
+          "f1": 0.421
+        },
+        {
+          "threshold": 0.65,
+          "recall": 0.25,
+          "precision": 0.5,
+          "f1": 0.333
+        }
+      ],
+      "unseen_predictions_summary": {
+        "true_defects": 12,
+        "detected_defects": 13,
+        "escaped_defects": 5
+      },
+      "status": "COMPLETED"
+    },
+    "step_10": {
+      "step_name": "Deployment & Monitoring",
+      "deployed_model_path": "lifecycle_outputs\\defect_detection_pipeline.joblib",
+      "inference_latency": "< 2ms per product",
+      "monitoring_specifications": {
+        "data_drift": "Monitor Kolmogorov-Smirnov (KS) test across the 35 selected sensor channels",
+        "concept_drift": "Track weekly rolling False Positive Rate vs. secondary inspection logs",
+        "alert_threshold": "Trigger alert if defect rate deviates by > 2 sigma from baseline 30%"
+      },
+      "sample_inference_test": {
+        "product_id_normal": "PROD_086",
+        "result_normal": {
+          "defect_probability": 0.2672,
+          "is_defective": 0,
+          "risk_level": "PASS (Healthy Product - APPROVE)"
+        },
+        "product_id_defect": "PROD_043",
+        "result_defect": {
+          "defect_probability": 0.1861,
+          "is_defective": 0,
+          "risk_level": "PASS (Healthy Product - APPROVE)"
+        }
+      },
+      "status": "COMPLETED"
+    }
+  },
+  "boxplot_data": {
+    "sensor_111": {
+      "normal": {
+        "min": -10.6,
+        "q1": -1.67,
+        "median": 0.99,
+        "q3": 3.88,
+        "max": 28.64,
+        "mean": 2.78
+      },
+      "defect": {
+        "min": -5.72,
+        "q1": 1.32,
+        "median": 8.26,
+        "q3": 17.81,
+        "max": 53.68,
+        "mean": 10.17
+      }
+    },
+    "sensor_058": {
+      "normal": {
+        "min": 18.81,
+        "q1": 35.53,
+        "median": 46.54,
+        "q3": 65.07,
+        "max": 349.21,
+        "mean": 54.57
+      },
+      "defect": {
+        "min": 18.01,
+        "q1": 40.89,
+        "median": 61.11,
+        "q3": 99.49,
+        "max": 400.0,
+        "mean": 81.16
+      }
+    },
+    "sensor_059": {
+      "normal": {
+        "min": 1.37,
+        "q1": 12.0,
+        "median": 17.28,
+        "q3": 22.01,
+        "max": 139.53,
+        "mean": 18.8
+      },
+      "defect": {
+        "min": 3.99,
+        "q1": 12.95,
+        "median": 18.23,
+        "q3": 22.02,
+        "max": 400.0,
+        "mean": 47.09
+      }
+    },
+    "sensor_008": {
+      "normal": {
+        "min": -6724.5,
+        "q1": -6022.81,
+        "median": -5521.62,
+        "q3": -5349.62,
+        "max": -4228.0,
+        "mean": -5668.3
+      },
+      "defect": {
+        "min": -7150.25,
+        "q1": -5576.44,
+        "median": -5452.0,
+        "q3": -5327.25,
+        "max": -1368.75,
+        "mean": -5278.52
+      }
+    },
+    "sensor_178": {
+      "normal": {
+        "min": 3.16,
+        "q1": 7.94,
+        "median": 9.09,
+        "q3": 10.81,
+        "max": 15.95,
+        "mean": 9.29
+      },
+      "defect": {
+        "min": 2.25,
+        "q1": 5.47,
+        "median": 7.39,
+        "q3": 9.58,
+        "max": 13.61,
+        "mean": 7.67
+      }
+    },
+    "sensor_165": {
+      "normal": {
+        "min": 59.98,
+        "q1": 66.81,
+        "median": 69.02,
+        "q3": 71.56,
+        "max": 76.88,
+        "mean": 69.26
+      },
+      "defect": {
+        "min": 60.27,
+        "q1": 65.62,
+        "median": 67.57,
+        "q3": 69.71,
+        "max": 75.94,
+        "mean": 67.4
+      }
+    }
+  },
+  "roc_points": [
+    {
+      "fpr": 0.0,
+      "tpr": 0.0,
+      "thresh": Infinity
+    },
+    {
+      "fpr": 0.007,
+      "tpr": 0.117,
+      "thresh": 0.816
+    },
+    {
+      "fpr": 0.007,
+      "tpr": 0.3,
+      "thresh": 0.778
+    },
+    {
+      "fpr": 0.007,
+      "tpr": 0.5,
+      "thresh": 0.778
+    },
+    {
+      "fpr": 0.014,
+      "tpr": 0.567,
+      "thresh": 0.729
+    },
+    {
+      "fpr": 0.021,
+      "tpr": 0.633,
+      "thresh": 0.687
+    },
+    {
+      "fpr": 0.029,
+      "tpr": 0.65,
+      "thresh": 0.678
+    },
+    {
+      "fpr": 0.036,
+      "tpr": 0.667,
+      "thresh": 0.671
+    },
+    {
+      "fpr": 0.043,
+      "tpr": 0.717,
+      "thresh": 0.606
+    },
+    {
+      "fpr": 0.057,
+      "tpr": 0.783,
+      "thresh": 0.523
+    },
+    {
+      "fpr": 0.093,
+      "tpr": 0.8,
+      "thresh": 0.407
+    },
+    {
+      "fpr": 0.107,
+      "tpr": 0.817,
+      "thresh": 0.369
+    },
+    {
+      "fpr": 0.114,
+      "tpr": 0.833,
+      "thresh": 0.358
+    },
+    {
+      "fpr": 0.164,
+      "tpr": 0.85,
+      "thresh": 0.304
+    },
+    {
+      "fpr": 0.214,
+      "tpr": 0.867,
+      "thresh": 0.231
+    },
+    {
+      "fpr": 0.271,
+      "tpr": 0.883,
+      "thresh": 0.207
+    },
+    {
+      "fpr": 0.307,
+      "tpr": 0.9,
+      "thresh": 0.159
+    },
+    {
+      "fpr": 0.414,
+      "tpr": 0.917,
+      "thresh": 0.121
+    },
+    {
+      "fpr": 0.493,
+      "tpr": 0.933,
+      "thresh": 0.102
+    },
+    {
+      "fpr": 0.614,
+      "tpr": 0.933,
+      "thresh": 0.102
+    },
+    {
+      "fpr": 0.629,
+      "tpr": 0.95,
+      "thresh": 0.101
+    },
+    {
+      "fpr": 0.65,
+      "tpr": 0.967,
+      "thresh": 0.093
+    },
+    {
+      "fpr": 0.686,
+      "tpr": 0.967,
+      "thresh": 0.083
+    },
+    {
+      "fpr": 0.707,
+      "tpr": 0.967,
+      "thresh": 0.077
+    },
+    {
+      "fpr": 0.814,
+      "tpr": 0.967,
+      "thresh": 0.059
+    },
+    {
+      "fpr": 0.85,
+      "tpr": 0.983,
+      "thresh": 0.056
+    },
+    {
+      "fpr": 0.857,
+      "tpr": 1.0,
+      "thresh": 0.053
+    },
+    {
+      "fpr": 1.0,
+      "tpr": 1.0,
+      "thresh": 0.0
+    }
+  ],
+  "model_comparisons": [
+    {
+      "name": "Support Vector Machine (RBF)",
+      "short": "SVM (RBF)",
+      "champion": true,
+      "accuracy": 0.75,
+      "precision": 0.6,
+      "recall": 0.5,
+      "f1": 0.545,
+      "auc": 0.856,
+      "tn": 24,
+      "fp": 4,
+      "fn": 6,
+      "tp": 6
+    },
+    {
+      "name": "Logistic Regression (L2)",
+      "short": "LogReg (L2)",
+      "champion": false,
+      "accuracy": 0.7,
+      "precision": 0.5,
+      "recall": 0.417,
+      "f1": 0.455,
+      "auc": 0.835,
+      "tn": 23,
+      "fp": 5,
+      "fn": 7,
+      "tp": 5
+    },
+    {
+      "name": "Random Forest Ensemble",
+      "short": "Random Forest",
+      "champion": false,
+      "accuracy": 0.7,
+      "precision": 0.5,
+      "recall": 0.25,
+      "f1": 0.333,
+      "auc": 0.785,
+      "tn": 25,
+      "fp": 3,
+      "fn": 9,
+      "tp": 3
+    },
+    {
+      "name": "XGBoost Classifier",
+      "short": "XGBoost",
+      "champion": false,
+      "accuracy": 0.675,
+      "precision": 0.4,
+      "recall": 0.167,
+      "f1": 0.235,
+      "auc": 0.76,
+      "tn": 25,
+      "fp": 3,
+      "fn": 10,
+      "tp": 2
+    }
+  ]
+};
+
+    let currentModelIndex = 0;
+    let currentTableData = [...UI_DATA.products];
+    let currentTablePage = 1;
+    const tablePageSize = 25;
+    let sortColumn = 'id';
+    let sortAsc = true;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Initialize Confusion Matrix
+      onCmThresholdSlide(0.35);
+      
+      // Initialize Bar Graphs
+      renderCorrelationBars();
+      renderMeansBars();
+      renderModelBars();
+
+      // Initialize Graphs
+      renderRocCurve();
+      renderBoxplots();
+      initPcaCanvas();
+
+      // Initialize Table
+      renderTablePage();
+
+      // Initialize Station
+      initStation();
+
+      // Initialize Lifecycle
+      renderLifecycle();
+    });
+
+    // View Navigation Switcher
+    function switchView(viewName) {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`view-btn-${viewName}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      ['confusion', 'bargraph', 'graphs', 'table', 'station', 'lifecycle'].forEach(v => {
+        const el = document.getElementById(`section-${v}`);
+        if (el) {
+          if (v === viewName) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+
+      if (viewName === 'graphs') {
+        setTimeout(drawPcaSub, 50);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 1: CONFUSION MATRIX FUNCTIONS
+    // -------------------------------------------------------------
+    function selectModelCM(idx) {
+      currentModelIndex = idx;
+      document.querySelectorAll('[id^="cm-model-"]').forEach((b, i) => {
+        if (i === idx) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+
+      const m = UI_DATA.model_comparisons[idx];
+      document.getElementById('val_cm_tn').innerText = m.tn;
+      document.getElementById('val_cm_fp').innerText = m.fp;
+      document.getElementById('val_cm_fn').innerText = m.fn;
+      document.getElementById('val_cm_tp').innerText = m.tp;
+
+      document.getElementById('cm_recall_text').innerText = (m.recall * 100).toFixed(1) + "%";
+      document.getElementById('cm_recall_bar').style.width = (m.recall * 100) + "%";
+
+      document.getElementById('cm_precision_text').innerText = (m.precision * 100).toFixed(1) + "%";
+      document.getElementById('cm_precision_bar').style.width = (m.precision * 100) + "%";
+
+      document.getElementById('cm_accuracy_text').innerText = (m.accuracy * 100).toFixed(1) + "%";
+      document.getElementById('cm_accuracy_bar').style.width = (m.accuracy * 100) + "%";
+
+      const saved = m.tp * 5000;
+      document.getElementById('cm_cost_saved').innerText = `+$${saved.toLocaleString()} Saved`;
+      document.getElementById('cm_cost_desc').innerText = `${m.name}: Caught ${m.tp} defects early, preventing $${saved.toLocaleString()} in downstream manufacturing losses.`;
+    }
+
+    function onCmThresholdSlide(val) {
+      const t = parseFloat(val);
+      document.getElementById('cmThresholdVal').innerText = t.toFixed(2);
+
+      const match = UI_DATA.threshold_curve.reduce((prev, curr) => 
+        Math.abs(curr.threshold - t) < Math.abs(prev.threshold - t) ? curr : prev
+      );
+
+      document.getElementById('val_cm_tn').innerText = match.tn;
+      document.getElementById('val_cm_fp').innerText = match.fp;
+      document.getElementById('val_cm_fn').innerText = match.fn;
+      document.getElementById('val_cm_tp').innerText = match.tp;
+
+      document.getElementById('cm_recall_text').innerText = (match.recall * 100).toFixed(1) + "%";
+      document.getElementById('cm_recall_bar').style.width = (match.recall * 100) + "%";
+
+      document.getElementById('cm_precision_text').innerText = (match.precision * 100).toFixed(1) + "%";
+      document.getElementById('cm_precision_bar').style.width = (match.precision * 100) + "%";
+
+      document.getElementById('cm_accuracy_text').innerText = (match.accuracy * 100).toFixed(1) + "%";
+      document.getElementById('cm_accuracy_bar').style.width = (match.accuracy * 100) + "%";
+
+      const saved = match.tp * 5000;
+      const retestCost = match.fp * 150;
+      document.getElementById('cm_cost_saved').innerText = `+$${saved.toLocaleString()} Saved`;
+      document.getElementById('cm_cost_desc').innerText = `Intercepted ${match.tp} defects (preventing $${saved.toLocaleString()} escape costs) while incurring $${retestCost.toLocaleString()} in secondary automated retests.`;
+
+      // Update ROC operating marker position if ROC exists
+      updateRocMarker(match.fp / (match.fp + match.tn || 1), match.recall);
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 2: BAR GRAPHS FUNCTIONS
+    // -------------------------------------------------------------
+    function switchBarView(tabName) {
+      document.querySelectorAll('[id^="bar-tab-"]').forEach(b => b.classList.remove('active'));
+      const active = document.getElementById(`bar-tab-${tabName}`);
+      if (active) active.classList.add('active');
+
+      ['correlation', 'means', 'models'].forEach(t => {
+        const el = document.getElementById(`bar-container-${t}`);
+        if (el) {
+          if (t === tabName) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+    }
+
+    function renderCorrelationBars() {
+      const container = document.getElementById('barCorrList');
+      const corrs = [
+        { name: 'sensor_111 (Critical Process Deviation)', r: 0.352 },
+        { name: 'sensor_058 (Chamber RF Reflection Anomaly)', r: 0.251 },
+        { name: 'sensor_059 (Chemical Vapor Flow Rate)', r: 0.244 },
+        { name: 'sensor_008 (Plasma Etch Depth Variance)', r: 0.237 },
+        { name: 'sensor_062 (Vapor Deposition Uniformity)', r: 0.234 },
+        { name: 'sensor_178 (Thermal Process Stabilizer)', r: -0.272 },
+        { name: 'sensor_165 (Dielectric Isolation Barrier)', r: -0.242 },
+        { name: 'sensor_021 (Coolant Chamber Pressure)', r: -0.200 }
+      ];
+
+      container.innerHTML = corrs.map(c => `
+        <div class="space-y-1">
+          <div class="flex justify-between font-semibold text-[11px]">
+            <span class="${c.r > 0 ? 'text-red-300' : 'text-emerald-300'}">${c.name}</span>
+            <span class="font-mono font-bold ${c.r > 0 ? 'text-red-400' : 'text-emerald-400'}">${c.r > 0 ? '+' : ''}${c.r.toFixed(3)}</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden flex">
+            <div class="${c.r > 0 ? 'bg-red-500' : 'bg-emerald-500'} h-2.5 rounded-full transition-all duration-500" style="width: ${Math.abs(c.r) * 200}%"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderMeansBars() {
+      const container = document.getElementById('barMeansList');
+      const sensors = ['sensor_111', 'sensor_058', 'sensor_059', 'sensor_008', 'sensor_178', 'sensor_165'];
+
+      container.innerHTML = sensors.map(s => {
+        const stats = UI_DATA.boxplot_data[s];
+        const maxVal = Math.max(stats.defect.mean, stats.normal.mean, 1);
+        const defPct = Math.min(100, Math.max(10, (stats.defect.mean / maxVal) * 100));
+        const normPct = Math.min(100, Math.max(10, (stats.normal.mean / maxVal) * 100));
+
+        return `
+          <div class="space-y-2 pb-3 border-b border-slate-800/80">
+            <div class="flex justify-between font-mono font-bold text-slate-300">
+              <span class="text-blue-400">${s}</span>
+              <span class="text-slate-400 font-normal text-[11px]">Defect Mean: <strong class="text-red-400">${stats.defect.mean}</strong> vs Normal: <strong class="text-blue-400">${stats.normal.mean}</strong></span>
+            </div>
+            
+            <div class="space-y-1 text-[10px]">
+              <div class="flex items-center gap-2">
+                <span class="w-16 font-mono text-red-400">Defect:</span>
+                <div class="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-red-500 h-2 rounded-full" style="width: ${defPct}%"></div>
+                </div>
+                <span class="font-mono text-slate-400">${stats.defect.mean}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-16 font-mono text-blue-400">Normal:</span>
+                <div class="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-blue-500 h-2 rounded-full" style="width: ${normPct}%"></div>
+                </div>
+                <span class="font-mono text-slate-400">${stats.normal.mean}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderModelBars() {
+      const grid = document.getElementById('barModelsGrid');
+      grid.innerHTML = UI_DATA.model_comparisons.map(m => `
+        <div class="bg-slate-950 p-4 rounded-xl border ${m.champion ? 'border-blue-500/80 shadow-lg shadow-blue-500/10' : 'border-slate-800'} space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-white text-xs">${m.name}</span>
+            ${m.champion ? '<span class="px-2 py-0.5 rounded text-[10px] bg-blue-500 text-white font-bold">Champion</span>' : ''}
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-400">ROC-AUC:</span>
+                <span class="font-mono font-bold text-emerald-400">${m.auc.toFixed(4)}</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-1.5" style="width: ${m.auc * 100}%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-400">Defect Recall (Catch Rate):</span>
+                <span class="font-mono font-bold text-blue-400">${(m.recall * 100).toFixed(1)}%</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-blue-500 h-1.5" style="width: ${m.recall * 100}%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-400">Test Accuracy:</span>
+                <span class="font-mono font-bold text-purple-400">${(m.accuracy * 100).toFixed(1)}%</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-purple-500 h-1.5" style="width: ${m.accuracy * 100}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 3: ADVANCED GRAPHS FUNCTIONS
+    // -------------------------------------------------------------
+    function switchGraphSubtab(tabName) {
+      document.querySelectorAll('[id^="graph-tab-"]').forEach(b => b.classList.remove('active'));
+      const active = document.getElementById(`graph-tab-${tabName}`);
+      if (active) active.classList.add('active');
+
+      ['roc', 'boxplot', 'pca'].forEach(t => {
+        const el = document.getElementById(`graph-container-${t}`);
+        if (el) {
+          if (t === tabName) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+
+      if (tabName === 'pca') {
+        setTimeout(drawPcaSub, 50);
+      }
+    }
+
+    function renderRocCurve() {
+      const pts = UI_DATA.roc_points;
+      if (!pts || !pts.length) return;
+
+      // Map (fpr, tpr) to SVG coords: (10, 90) is (0, 0), (90, 10) is (1, 1)
+      const mapped = pts.map(p => ({
+        x: 10 + (p.fpr * 80),
+        y: 90 - (p.tpr * 80)
+      }));
+
+      // Path
+      let d = `M ${mapped[0].x} ${mapped[0].y}`;
+      for (let i = 1; i < mapped.length; i++) {
+        d += ` L ${mapped[i].x} ${mapped[i].y}`;
+      }
+      document.getElementById('rocPath').setAttribute('d', d);
+
+      // Area
+      let areaPts = `10,90 ${mapped.map(m => `${m.x},${m.y}`).join(' ')} 90,90`;
+      document.getElementById('rocArea').setAttribute('points', areaPts);
+    }
+
+    function updateRocMarker(fpr, tpr) {
+      const mx = 10 + (Math.max(0, Math.min(1, fpr)) * 80);
+      const my = 90 - (Math.max(0, Math.min(1, tpr)) * 80);
+      const marker = document.getElementById('rocOperatingMarker');
+      if (marker) {
+        marker.setAttribute('cx', mx);
+        marker.setAttribute('cy', my);
+      }
+    }
+
+    function renderBoxplots() {
+      const container = document.getElementById('boxplotsContainer');
+      const sensors = ['sensor_111', 'sensor_058', 'sensor_178', 'sensor_008'];
+
+      container.innerHTML = sensors.map(s => {
+        const d = UI_DATA.boxplot_data[s];
+        const overallMin = Math.min(d.normal.min, d.defect.min);
+        const overallMax = Math.max(d.normal.max, d.defect.max);
+        const range = overallMax - overallMin || 1;
+
+        const toPct = val => Math.max(0, Math.min(100, ((val - overallMin) / range) * 100));
+
+        return `
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-white font-mono">${s}</span>
+              <span class="text-slate-400 text-[11px]">Range: [${overallMin} to ${overallMax}]</span>
+            </div>
+
+            <!-- Normal Wafer Boxplot Row -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] text-blue-400 font-mono">
+                <span>Normal Wafers</span>
+                <span>Median: ${d.normal.median} (Q1: ${d.normal.q1}, Q3: ${d.normal.q3})</span>
+              </div>
+              <div class="relative w-full h-5 bg-slate-900 rounded border border-slate-800">
+                <!-- Whisker Line -->
+                <div class="absolute top-2.5 h-0.5 bg-blue-500/50" style="left: ${toPct(d.normal.min)}%; width: ${toPct(d.normal.max) - toPct(d.normal.min)}%;"></div>
+                <!-- IQR Box -->
+                <div class="absolute top-1 h-3 bg-blue-600/60 border border-blue-400 rounded-sm" style="left: ${toPct(d.normal.q1)}%; width: ${toPct(d.normal.q3) - toPct(d.normal.q1)}%;"></div>
+                <!-- Median Bar -->
+                <div class="absolute top-0.5 h-4 w-1 bg-white rounded" style="left: ${toPct(d.normal.median)}%;"></div>
+              </div>
+            </div>
+
+            <!-- Defective Wafer Boxplot Row -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] text-red-400 font-mono">
+                <span>Defective Wafers</span>
+                <span>Median: ${d.defect.median} (Q1: ${d.defect.q1}, Q3: ${d.defect.q3})</span>
+              </div>
+              <div class="relative w-full h-5 bg-slate-900 rounded border border-slate-800">
+                <!-- Whisker Line -->
+                <div class="absolute top-2.5 h-0.5 bg-red-500/50" style="left: ${toPct(d.defect.min)}%; width: ${toPct(d.defect.max) - toPct(d.defect.min)}%;"></div>
+                <!-- IQR Box -->
+                <div class="absolute top-1 h-3 bg-red-600/60 border border-red-400 rounded-sm" style="left: ${toPct(d.defect.q1)}%; width: ${toPct(d.defect.q3) - toPct(d.defect.q1)}%;"></div>
+                <!-- Median Bar -->
+                <div class="absolute top-0.5 h-4 w-1 bg-white rounded" style="left: ${toPct(d.defect.median)}%;"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function initPcaCanvas() {
+      const canvas = document.getElementById('pcaCanvasSub');
+      if (!canvas) return;
+      canvas.addEventListener('mousemove', onPcaMouseMoveSub);
+      canvas.addEventListener('mouseleave', () => {
+        const tip = document.getElementById('pcaTooltipSub');
+        if (tip) tip.classList.add('hidden');
+      });
+      drawPcaSub();
+    }
+
+    function drawPcaSub() {
+      const canvas = document.getElementById('pcaCanvasSub');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Grid
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let x = 40; x < w; x += 60) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 30; y < h; y += 50) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      const xs = UI_DATA.products.map(p => p.pca_x);
+      const ys = UI_DATA.products.map(p => p.pca_y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+      UI_DATA.products.forEach(p => {
+        const cx = 30 + ((p.pca_x - minX) / (maxX - minX)) * (w - 60);
+        const cy = 20 + ((p.pca_y - minY) / (maxY - minY)) * (h - 40);
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, p.true_label === 1 ? 5 : 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = p.true_label === 1 ? '#ef4444' : '#3b82f6';
+        ctx.fill();
+        if (p.true_label === 1) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      });
+    }
+
+    function onPcaMouseMoveSub(e) {
+      const canvas = document.getElementById('pcaCanvasSub');
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+      const xs = UI_DATA.products.map(p => p.pca_x);
+      const ys = UI_DATA.products.map(p => p.pca_y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+      let closest = null;
+      let closestDist = 14;
+
+      UI_DATA.products.forEach(p => {
+        const cx = 30 + ((p.pca_x - minX) / (maxX - minX)) * (canvas.width - 60);
+        const cy = 20 + ((p.pca_y - minY) / (maxY - minY)) * (canvas.height - 40);
+        const dist = Math.hypot(cx - mx, cy - my);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = p;
+        }
+      });
+
+      const tip = document.getElementById('pcaTooltipSub');
+      if (closest && tip) {
+        tip.classList.remove('hidden');
+        tip.style.left = (e.clientX - rect.left + 15) + 'px';
+        tip.style.top = (e.clientY - rect.top - 20) + 'px';
+        tip.innerHTML = `
+          <div class="font-bold text-white">${closest.id}</div>
+          <div class="text-[11px] text-slate-400">Actual: <span class="${closest.true_label === 1 ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold'}">${closest.true_label === 1 ? 'Defective' : 'Normal'}</span></div>
+          <div class="text-[11px] text-slate-400">Risk: <span class="text-blue-400 font-bold">${(closest.prob * 100).toFixed(1)}%</span></div>
+        `;
+      } else if (tip) {
+        tip.classList.add('hidden');
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 4: TABLE FUNCTIONS
+    // -------------------------------------------------------------
+    function onMainTableFilter() {
+      const q = document.getElementById('mainSearchInput').value.toUpperCase().trim();
+      const f = document.getElementById('mainFilterSelect').value;
+
+      currentTableData = UI_DATA.products.filter(p => {
+        if (q && !p.id.includes(q)) return false;
+        if (f === 'defects') return p.true_label === 1;
+        if (f === 'normals') return p.true_label === 0;
+        if (f === 'tp') return p.true_label === 1 && p.pred_label === 1;
+        if (f === 'fn') return p.true_label === 1 && p.pred_label === 0;
+        if (f === 'fp') return p.true_label === 0 && p.pred_label === 1;
+        return true;
+      });
+
+      currentTablePage = 1;
+      renderTablePage();
+    }
+
+    function sortTable(col) {
+      if (sortColumn === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortColumn = col;
+        sortAsc = true;
+      }
+
+      currentTableData.sort((a, b) => {
+        let v1 = a[col];
+        let v2 = b[col];
+        if (typeof v1 === 'string') {
+          return sortAsc ? v1.localeCompare(v2) : v2.localeCompare(v1);
+        }
+        return sortAsc ? v1 - v2 : v2 - v1;
+      });
+
+      renderTablePage();
+    }
+
+    function renderTablePage() {
+      const tbody = document.getElementById('mainTableBody');
+      const startIdx = (currentTablePage - 1) * tablePageSize;
+      const endIdx = startIdx + tablePageSize;
+      const pageItems = currentTableData.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageItems.map(p => {
+        const riskPct = (p.prob * 100).toFixed(1);
+        const isCaught = p.true_label === 1 && p.pred_label === 1;
+        const isEscaped = p.true_label === 1 && p.pred_label === 0;
+
+        return `
+          <tr class="hover:bg-slate-800/50 transition">
+            <td class="p-3 font-bold text-white">${p.id}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.true_label === 1 ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+                ${p.true_label === 1 ? 'DEFECT (1)' : 'PASS (0)'}
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.pred_label === 1 ? 'bg-red-950 text-red-300' : 'bg-emerald-950 text-emerald-300'}">
+                ${p.pred_label === 1 ? 'REJECT' : 'APPROVE'}
+              </span>
+            </td>
+            <td class="p-3">
+              <div class="flex items-center gap-2">
+                <div class="w-16 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div class="${p.prob >= 0.5 ? 'bg-red-500' : p.prob >= 0.35 ? 'bg-amber-500' : 'bg-emerald-500'} h-1.5" style="width: ${riskPct}%"></div>
+                </div>
+                <span class="font-bold ${p.prob >= 0.35 ? 'text-red-400' : 'text-slate-300'}">${riskPct}%</span>
+              </div>
+            </td>
+            <td class="p-3 text-blue-300">${p.sensors.sensor_111}</td>
+            <td class="p-3 text-indigo-300">${p.sensors.sensor_058}</td>
+            <td class="p-3 text-emerald-300">${p.sensors.sensor_178}</td>
+            <td class="p-3 text-purple-300">${p.sensors.sensor_008}</td>
+            <td class="p-3">
+              <button onclick="openWaferModal('${p.id}')" class="px-2.5 py-1 rounded bg-blue-600/30 hover:bg-blue-600 text-blue-200 text-[10px] font-semibold transition">
+                Inspect ↗
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Update counters
+      const total = currentTableData.length;
+      const totalPages = Math.max(1, Math.ceil(total / tablePageSize));
+      document.getElementById('tableRecordCount').innerText = `Displaying ${startIdx + 1}–${Math.min(endIdx, total)} of ${total} products`;
+      document.getElementById('pageIndicator').innerText = `Page ${currentTablePage} / ${totalPages}`;
+      document.getElementById('prevPageBtn').disabled = currentTablePage <= 1;
+      document.getElementById('nextPageBtn').disabled = currentTablePage >= totalPages;
+    }
+
+    function prevTablePage() {
+      if (currentTablePage > 1) {
+        currentTablePage--;
+        renderTablePage();
+      }
+    }
+
+    function nextTablePage() {
+      const totalPages = Math.ceil(currentTableData.length / tablePageSize);
+      if (currentTablePage < totalPages) {
+        currentTablePage++;
+        renderTablePage();
+      }
+    }
+
+    function openWaferModal(id) {
+      const p = UI_DATA.products.find(x => x.id === id);
+      if (!p) return;
+
+      document.getElementById('modalTitle').innerText = `${p.id} Quality Telemetry Report`;
+      document.getElementById('modalBody').innerHTML = `
+        <div class="grid grid-cols-2 gap-3 p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <div>
+            <span class="text-slate-400">Actual Quality Status:</span>
+            <div class="text-sm font-bold ${p.true_label === 1 ? 'text-red-400' : 'text-emerald-400'}">${p.true_label === 1 ? 'DEFECTIVE PRODUCT (1)' : 'NORMAL PRODUCT (0)'}</div>
+          </div>
+          <div>
+            <span class="text-slate-400">Predicted Defect Risk:</span>
+            <div class="text-sm font-bold ${p.prob >= 0.35 ? 'text-red-400' : 'text-emerald-400'}">${(p.prob * 100).toFixed(1)}% (${p.pred_label === 1 ? 'FLAGGED' : 'PASSED'})</div>
+          </div>
+        </div>
+
+        <div class="space-y-1.5 pt-2">
+          <div class="font-bold text-white uppercase text-[11px]">Primary Telemetry Measurements:</div>
+          <div class="grid grid-cols-2 gap-2 font-mono text-[11px]">
+            <div class="p-2 bg-slate-800/60 rounded border border-slate-700">sensor_111: <span class="text-blue-300 font-bold">${p.sensors.sensor_111}</span></div>
+            <div class="p-2 bg-slate-800/60 rounded border border-slate-700">sensor_058: <span class="text-indigo-300 font-bold">${p.sensors.sensor_058}</span></div>
+            <div class="p-2 bg-slate-800/60 rounded border border-slate-700">sensor_178: <span class="text-emerald-300 font-bold">${p.sensors.sensor_178}</span></div>
+            <div class="p-2 bg-slate-800/60 rounded border border-slate-700">sensor_008: <span class="text-purple-300 font-bold">${p.sensors.sensor_008}</span></div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('waferModal').classList.remove('hidden');
+    }
+
+    function closeWaferModal() {
+      document.getElementById('waferModal').classList.add('hidden');
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 5: LIVE STATION FUNCTIONS
+    // -------------------------------------------------------------
+    function initStation() {
+      const select = document.getElementById('stationProductSelect');
+      select.innerHTML = UI_DATA.products.map(p => `
+        <option value="${p.id}">${p.id} — ${p.true_label === 1 ? '[DEFECTIVE]' : '[NORMAL]'} (${(p.prob * 100).toFixed(1)}% Risk)</option>
+      `).join('');
+      onStationProductSelect(UI_DATA.products[0].id);
+    }
+
+    function onStationProductSelect(id) {
+      const p = UI_DATA.products.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('stationProductSelect').value = id;
+
+      setStationSlider('111', p.sensors.sensor_111, UI_DATA.sensor_stats.sensor_111);
+      setStationSlider('058', p.sensors.sensor_058, UI_DATA.sensor_stats.sensor_058);
+      setStationSlider('178', p.sensors.sensor_178, UI_DATA.sensor_stats.sensor_178);
+
+      document.getElementById('st_groundTruth').innerText = p.true_label === 1 ? 'DEFECTIVE (1)' : 'NORMAL / PASS (0)';
+      document.getElementById('st_groundTruth').className = p.true_label === 1 ? 'font-bold text-red-400' : 'font-bold text-emerald-400';
+
+      updateStationGauge(p.prob);
+    }
+
+    function setStationSlider(code, val, stats) {
+      const z = (val - stats.mean) / (Math.abs(stats.max - stats.min) / 4 || 1);
+      const clampedZ = Math.max(-3, Math.min(3, z));
+      document.getElementById(`st_slider_${code}`).value = clampedZ.toFixed(1);
+      document.getElementById(`st_val_${code}`).innerText = `${val} (${clampedZ >= 0 ? '+' : ''}${clampedZ.toFixed(1)}σ)`;
+    }
+
+    function onStationSliderChange() {
+      const z111 = parseFloat(document.getElementById('st_slider_111').value);
+      const z058 = parseFloat(document.getElementById('st_slider_058').value);
+      const z178 = parseFloat(document.getElementById('st_slider_178').value);
+
+      document.getElementById('st_val_111').innerText = `${z111 >= 0 ? '+' : ''}${z111.toFixed(1)}σ`;
+      document.getElementById('st_val_058').innerText = `${z058 >= 0 ? '+' : ''}${z058.toFixed(1)}σ`;
+      document.getElementById('st_val_178').innerText = `${z178 >= 0 ? '+' : ''}${z178.toFixed(1)}σ`;
+
+      const logit = -1.2 + (z111 * 0.95) + (z058 * 0.65) - (z178 * 0.85);
+      const prob = 1 / (1 + Math.exp(-logit));
+      updateStationGauge(prob);
+    }
+
+    function updateStationGauge(prob) {
+      const probPct = (prob * 100).toFixed(1);
+      document.getElementById('st_gaugeText').innerText = probPct + "%";
+
+      const arc = document.getElementById('st_gaugeArc');
+      const offset = 125.6 * (1 - prob);
+      arc.style.strokeDashoffset = offset;
+
+      const badge = document.getElementById('st_verdictBadge');
+      const actionText = document.getElementById('st_actionText');
+
+      if (prob >= 0.50) {
+        arc.style.stroke = '#ef4444';
+        badge.innerText = 'CRITICAL DEFECT DETECTED';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30 pulse-alert';
+        actionText.innerHTML = '<span class="text-red-400 font-bold">REJECT WAFER IMMEDIATELY</span>. Halt wafer lot & audit plasma etch chamber RF parameters.';
+      } else if (prob >= 0.35) {
+        arc.style.stroke = '#f59e0b';
+        badge.innerText = 'MODERATE DEFECT RISK';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30';
+        actionText.innerHTML = '<span class="text-amber-400 font-bold">SECONDARY INSPECTION REQUIRED</span>. Route unit to automated optical/electrical retest station ($150).';
+      } else {
+        arc.style.stroke = '#10b981';
+        badge.innerText = 'PASSED QUALITY INSPECTION';
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        actionText.innerHTML = '<span class="text-emerald-400 font-bold">PASS INSPECTION</span>. Wafer telemetry nominal. Authorize for automated dicing & packaging.';
+      }
+    }
+
+    function pickStationRandom() {
+      const rand = UI_DATA.products[Math.floor(Math.random() * UI_DATA.products.length)];
+      onStationProductSelect(rand.id);
+    }
+
+    function pickStationDefect() {
+      const def = UI_DATA.products.find(p => p.true_label === 1 && p.prob > 0.65) || UI_DATA.products[1];
+      onStationProductSelect(def.id);
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 6: LIFECYCLE FUNCTIONS
+    // -------------------------------------------------------------
+    const LC_STEPS = [
+      { num: 1, title: "Business Understanding", desc: "Define cost matrix & minimize False Negatives ($5,000 escape)." },
+      { num: 2, title: "Data Collection", desc: "Ingest 200 products × 200 columns from UCI SECOM repository." },
+      { num: 3, title: "Data Preparation", desc: "Structure schema: 140 Normal (70%), 60 Defect (30%)." },
+      { num: 4, title: "Data Cleaning", desc: "0 missing values, prune zero-variance channels, audit 432 outlier cells." },
+      { num: 5, title: "Exploratory Data Analysis", desc: "Sensor correlation discovery (sensor_111: +0.352, sensor_178: -0.272)." },
+      { num: 6, title: "Feature Engineering", desc: "StandardScaler + ANOVA SelectKBest (retaining 35 high-signal channels)." },
+      { num: 7, title: "Model Building", desc: "Train SVM (RBF), Logistic Regression, Random Forest, and XGBoost." },
+      { num: 8, title: "Model Evaluation", desc: "Champion Selection: SVM achieved 75% accuracy and 50% defect recall." },
+      { num: 9, title: "Testing & Tuning", desc: "Holdout test on 40 unseen products; tune decision threshold to 0.35." },
+      { num: 10, title: "Deployment & Monitoring", desc: "Export pipeline bundle (.joblib) with <2ms latency & KS drift alerts." }
+    ];
+
+    function renderLifecycle() {
+      const grid = document.getElementById('mainLifecycleGrid');
+      grid.innerHTML = LC_STEPS.map(s => `
+        <div onclick="selectLcStep(${s.num})" id="lcCard_${s.num}" class="cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-3 hover:border-blue-500 transition flex flex-col justify-between min-h-[85px]">
+          <div class="flex items-center justify-between">
+            <span class="w-6 h-6 rounded bg-slate-800 text-blue-400 font-extrabold text-xs flex items-center justify-center">${s.num}</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white mt-1.5">${s.title}</div>
+            <div class="text-[10px] text-slate-400 truncate">${s.desc}</div>
+          </div>
+        </div>
+      `).join('');
+      selectLcStep(1);
+    }
+
+    function selectLcStep(num) {
+      document.querySelectorAll('[id^="lcCard_"]').forEach(c => c.classList.remove('border-blue-500', 'bg-blue-950/20'));
+      const active = document.getElementById(`lcCard_${num}`);
+      if (active) active.classList.add('border-blue-500', 'bg-blue-950/20');
+
+      const s = LC_STEPS.find(x => x.num === num);
+      document.getElementById('mainLifecycleDetail').innerHTML = `
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center gap-2 pb-2 border-b border-slate-800">
+            <span class="w-6 h-6 rounded bg-blue-600 text-white font-bold text-xs flex items-center justify-center">${s.num}</span>
+            <span class="text-sm font-bold text-white">${s.title}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold ml-auto">Phase Complete</span>
+          </div>
+          <p class="text-slate-300 pt-1">${s.desc}</p>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
